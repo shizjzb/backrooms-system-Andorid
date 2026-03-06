@@ -1214,9 +1214,6 @@ async function tavilySearch(query) {
 function createStreamingNarratorEl(type) {
   const feed = document.getElementById("feed");
 
-  // 直接把已有的 typing-row 变形成叙事框
-  // 这样用户看到的是"动画消失，文字开始出现"的连续过渡
-  // 而不是"删掉再重建"导致的闪烁感
   let hostEl = document.getElementById("typing-row");
   if (!hostEl) {
     hostEl = document.createElement("div");
@@ -1227,6 +1224,9 @@ function createStreamingNarratorEl(type) {
   hostEl.className = "msg";
   if (type === "iz") {
     hostEl.innerHTML = `<div class="m-iz"><div class="iz-hdr"><div class="iz-av" style="cursor:default">伊</div><div><div class="iz-nm">伊兹 · IZ</div><div class="iz-tg">神经接入 · 仅主角可见</div></div></div><div class="iz-body" id="stream-narrator-inner" style="min-height:2em"></div></div>`;
+  } else {
+    hostEl.innerHTML = `<div class="m-narrator" id="stream-narrator-inner" style="min-height:2em"></div>`;
+  }
   } else {
     hostEl.innerHTML = `<div class="m-narrator" id="stream-narrator-inner" style="min-height:2em"></div>`;
   }
@@ -1341,13 +1341,16 @@ async function callDS(userMsg, searchContext) {
   let narratorStartIdx = -1;    // narrator content开始的位置
   let narratorDone = false;     // narrator内容是否已经结束
 
-  // 这两种写法AI都可能输出（有无空格），都要能识别
   const NARRATOR_MARKERS = [
     `"type":"narrator","content":"`,
     `"type": "narrator","content":"`,
     `"type":"narrator", "content":"`,
     `"type": "narrator", "content": "`,
     `"type" : "narrator", "content" : "`,
+    `"type":"iz","content":"`,
+    `"type": "iz","content":"`,
+    `"type":"iz", "content":"`,
+    `"type": "iz", "content": "`,
   ];
 
   try {

@@ -875,12 +875,12 @@ let USER_STYLES = [];
 let IZ_PERSONA = "";
 
 const DEFAULT_DEVOUR_PERSONA = `═══ 暴食系统 ═══
-后室史上从未出现过的「暴食系统」异能，主角独有：
-Lv1(当前)：吞噬死亡/极虚弱微型实体，获基础能量碎片
-Lv2(100exp)：吞噬中型实体，获形态模拟碎片，可短暂复现被吞噬实体特性
-Lv3(300exp)：吞噬空间元素（材质/声音/气味），开始影响局部环境
-Lv4+(600exp)：被后室底层规则感知，引发大范围异常，可吞噬概念碎片
-随等级提升：后室实体产生"预感"，BackNet出现暴食者目击帖`;
+主角独有异能：
+Lv1：吞噬死亡/极虚弱微型实体→基础能量碎片
+Lv2(100exp)：吞噬中型实体→形态模拟碎片，可短暂复现其特性
+Lv3(300exp)：吞噬空间元素（材质/声音/气味）→影响局部环境
+Lv4+(600exp)：被后室底层规则感知→大范围异常，可吞噬概念碎片
+升级后效果：实体产生"预感"，BackNet出现目击帖`;
 
 let DEVOUR_PERSONA = DEFAULT_DEVOUR_PERSONA;
 
@@ -1082,10 +1082,26 @@ function buildSystemPrompt() {
 
   const summaryNote = t.worldSummary
     ? `\n【世界状态记忆摘要（务必参考）】\n${t.worldSummary}\n` : "";
-  const logNote = (t.progressLog && t.progressLog.length)
-    ? `\n【近期进展速记（按回合顺序，务必参考以保持剧情连贯）】\n${t.progressLog.slice(-15).map((e,i,arr) => `第${t.turn-(arr.length-1-i)}回合：${e}`).join("\n")}\n` : "";
-  const npcHint = (t.npcRoster && t.npcRoster.length)
-    ? `\n【已知重要NPC（保持人物一致性）】\n${t.npcRoster.map(n=>`${n.name}（${n.relation}）：${n.desc}`).join("\n")}\n` : "";
+  // 只保留最近6条进展，worldSummary每5回合更新会弥补远期记忆
+const logNote = (t.progressLog && t.progressLog.length)
+    ? `\n【近期进展（最近6回合）】\n${t.progressLog.slice(-6).map((e,i,arr) => `T${t.turn-(arr.length-1-i)}：${e}`).join("\n")}\n` : "";
+  // 重要NPC完整展示，普通NPC只列名字节省token
+// important:true 的角色永久保留，普通角色10回合无互动后自动清理
+const importantNpcs = (t.npcRoster || []).filter(n => n.important);
+const normalNpcs    = (t.npcRoster || []).filter(n => !n.important);
+const npcHint = (t.npcRoster && t.npcRoster.length)
+  ? `\n【已知NPC】\n` +
+    (importantNpcs.length
+      ? `★核心角色（必须保持人物一致性，除非你主动remove否则永远存在）：\n${
+          importantNpcs.map(n => `${n.name}[${n.relation}]：${n.desc}${n.lastSeen ? '·见于'+n.lastSeen : ''}`).join("\n")
+        }\n`
+      : "") +
+    (normalNpcs.length
+      ? `普通角色（${normalNpcs.length}人，10回合无互动自动清理）：${
+          normalNpcs.map(n => n.name).join("、")
+        }\n`
+      : "")
+  : "";
   const customNote  = s.customPromptAppend ? `\n【自定义设定】\n${s.customPromptAppend}\n` : "";
   const personaNote = IZ_PERSONA.trim()
     ? `【玩家对伊兹的专属设定 — 最高优先级，必须完全遵守】\n${IZ_PERSONA.trim()}\n\n` : "";
@@ -1114,8 +1130,13 @@ ${devourBlock}
 在JSON中包含 "imagePrompt" 字段，5-10个英文单词描述当前场景
 
 ═══ NPC更新（可选字段 npcUpdate）═══
-当本回合出现值得长期追踪的重要NPC时，在JSON中包含 npcUpdate 字段：
-{"npcUpdate":{"id":"唯一id","name":"名字","relation":"friendly/hostile/neutral/complex","desc":"一句话描述","lastSeen":"当前位置"}}
+用important字段区分两类NPC：
+「核心角色」有名字/有动机/影响主线/预计多次出现 → important:true，永久保留直到你主动remove
+「普通角色」路人/一次性/功能性 → important:false，系统10回合后自动清理
+upsert（新增或更新）：
+{"npcUpdate":{"action":"upsert","id":"唯一id","name":"名字","relation":"friendly/hostile/neutral/complex","desc":"一句话描述含核心动机","lastSeen":"当前位置","important":true或false}}
+remove（明确死亡/永久消失时才用）：
+{"npcUpdate":{"action":"remove","id":"唯一id"}}
 
 ═══ 层级更新（可选字段 levelUpdate）═══
 当进入新层级时，在JSON中包含 levelUpdate 字段：
@@ -1145,16 +1166,15 @@ ${devourBlock}
     {"type":"system","content":"系统警告"},
     {"type":"levelup","content":"升级描述"}
   ],
-  "options":[
-{"id":1,"text":"选项","type":"normal","hint":"· 可能的发展方向1 · 发展方向2"},
-    {"id":2,"text":"选项","type":"special","hint":"· 特殊走向预测"},
-    {"id":3,"text":"选项","type":"danger","hint":"· 高风险后果预测"},
-    {"id":4,"text":"【问伊兹】xxx","type":"iz","hint":"· 伊兹信息反馈"}
-  ]
+    "options":[
+    {"id":1,"text":"选项文字","type":"normal"},
+    {"id":2,"text":"选项文字","type":"special"},
+    {"id":3,"text":"选项文字","type":"danger"},
+    {"id":4,"text":"【问伊兹】xxx","type":"iz"}
+  ]
 }
 
-每次必含narrator和iz，options至少5个最多10个。
-每个option必须包含hint字段：基于当前玩家状态、NPC关系、威胁等级、层级特性，用「·」分隔列出1-3条此选项最可能触发的后续走向，每条不超过20字，直切要害，不废话。例如："· 引发NPC戒备 · 发现隐藏通道 · 体力消耗加剧"。
+每次必含narrator和iz，options至少5个最多10个。options不需要hint字段。至少5个最多8个选项，type只能是normal/special/danger/iz四种。
 
 当前状态：
 ${p.name} | ${p.currentLevel}(${p.levelCode}) | ${p.location}
@@ -1186,6 +1206,72 @@ async function tavilySearch(query) {
 // ════════════════════════════════════════════════════════
 //  DEEPSEEK API CALL (streaming)
 // ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+//  流式渲染辅助函数
+//  作用：在等待AI完整回复时，先把叙事文字逐渐显示出来
+//  让用户看到文字出现，而不是盯着转圈等待
+// ════════════════════════════════════════════════════════
+function createStreamingNarratorEl() {
+  const feed = document.getElementById("feed");
+  const div = document.createElement("div");
+  div.className = "msg";
+  // 创建一个临时的叙事框，流式内容会填充进去
+  // 流结束后这个元素会被移除，由正式的addMessages重新渲染
+  div.innerHTML = `<div class="m-narrator" id="stream-narrator-inner"></div>`;
+  const typing = document.getElementById("typing-row");
+  if (typing) feed.insertBefore(div, typing);
+  else feed.appendChild(div);
+
+  const inner = div.querySelector("#stream-narrator-inner");
+  let buffer = "";
+  let lastRenderedLen = 0;
+
+  return {
+    el: div,
+    // 把新到的文字追加进去并滚动到底部
+    append(newText) {
+      buffer += newText;
+      inner.innerHTML = nl(buffer);
+      feed.scrollTop = feed.scrollHeight;
+      lastRenderedLen = buffer.length;
+    },
+    // 流结束后移除这个临时元素
+    finish() {
+      div.remove();
+    }
+  };
+}
+
+// 从JSON字符串片段里提取content字段的内容
+// 遇到未转义的引号就停止，这标志着content字段结束了
+function extractJsonStringContent(str) {
+  let result = "";
+  let i = 0;
+  while (i < str.length) {
+    if (str[i] === '\\' && i + 1 < str.length) {
+      // 处理转义字符
+      const next = str[i + 1];
+      if      (next === 'n')  result += '\n';
+      else if (next === 't')  result += '\t';
+      else if (next === '"')  result += '"';
+      else if (next === '\\') result += '\\';
+      else if (next === 'r')  result += '';   // 忽略回车
+      else result += next;
+      i += 2;
+    } else if (str[i] === '"') {
+      // 遇到未转义的引号，content字段结束
+      break;
+    } else {
+      result += str[i];
+      i++;
+    }
+  }
+  return result;
+}
+
+// ════════════════════════════════════════════════════════
+//  DEEPSEEK API CALL (streaming + 流式预览)
+// ════════════════════════════════════════════════════════
 async function callDS(userMsg, searchContext) {
   const t = getActive();
   let enrichedMsg = searchContext
@@ -1193,7 +1279,29 @@ async function callDS(userMsg, searchContext) {
     : userMsg;
 
   t.convoHistory.push({ role:"user", content: enrichedMsg });
-  const msgs = t.convoHistory.slice(-22);
+
+  // ── 智能上下文压缩 ──
+  // 当对话历史超过24条时，把早期对话压缩成一条摘要
+  // 这样token消耗不会随游戏时长无限增长
+  let msgs;
+  if (t.convoHistory.length > 24) {
+    const recent = t.convoHistory.slice(-12);
+    const older  = t.convoHistory.slice(0, -12);
+    // 只提取用户行动作为摘要，AI回复太长不纳入
+    const olderSummary = older
+      .filter(m => m.role === "user")
+      .map(m => typeof m.content === "string" ? m.content.substring(0, 50) : "")
+      .filter(Boolean)
+      .join("；");
+    msgs = [
+      { role:"user",      content: `[早期行动摘要]：${olderSummary}` },
+      { role:"assistant", content: "[已记录]" },
+      ...recent
+    ];
+  } else {
+    msgs = t.convoHistory.slice(-22);
+  }
+
   const body = {
     model: DS_MODEL,
     max_tokens: LENGTH_TOKENS[SETTINGS.narrativeLength] || 4000,
@@ -1216,16 +1324,71 @@ async function callDS(userMsg, searchContext) {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let fullText = "";
+
+  // ── 流式预览状态追踪 ──
+  // 我们会在流里寻找第一个narrator的content字段，找到后实时渲染
+  let streamer = null;          // 流式渲染器实例
+  let streamBuf = "";           // 累积的原始流文本
+  let narratorStartIdx = -1;    // narrator content开始的位置
+  let narratorDone = false;     // narrator内容是否已经结束
+
+  // 这两种写法AI都可能输出（有无空格），都要能识别
+  const MARKER1 = `"type":"narrator","content":"`;
+  const MARKER2 = `"type": "narrator", "content": "`;
+
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const chunk = decoder.decode(value, { stream:true });
+      const chunk = decoder.decode(value, { stream: true });
+
       for (const line of chunk.split("\n")) {
         if (!line.startsWith("data:")) continue;
         const data = line.slice(5).trim();
         if (data === "[DONE]") break;
-        try { fullText += JSON.parse(data).choices?.[0]?.delta?.content || ""; } catch(_) {}
+        try {
+          const delta = JSON.parse(data).choices?.[0]?.delta?.content || "";
+          if (!delta) continue;
+
+          fullText  += delta;
+          streamBuf += delta;
+
+          // 只在narrator内容结束之前尝试流式预览，避免把JSON结构符号显示出来
+          if (!narratorDone) {
+            if (narratorStartIdx === -1) {
+              // 还没找到narrator开头，继续搜索
+              let idx = streamBuf.indexOf(MARKER1);
+              if (idx === -1) idx = streamBuf.indexOf(MARKER2);
+              if (idx !== -1) {
+                // 找到了！记录content开始的位置
+                const markerLen = streamBuf.indexOf(MARKER1) !== -1 ? MARKER1.length : MARKER2.length;
+                narratorStartIdx = idx + markerLen;
+                streamer = createStreamingNarratorEl();
+                // 把已经积累的narrator内容先渲染出来
+                const initial = extractJsonStringContent(streamBuf.slice(narratorStartIdx));
+                if (initial) streamer.append(initial);
+              }
+            } else {
+              // 已经在narrator content范围内，继续提取新增内容
+              const allContent = extractJsonStringContent(streamBuf.slice(narratorStartIdx));
+              if (streamer && allContent.length > (streamer._prevLen || 0)) {
+                const newPart = allContent.slice(streamer._prevLen || 0);
+                streamer.append(newPart);
+                streamer._prevLen = allContent.length;
+              }
+              // 检查narrator是否已结束：在content开始之后找到了未转义的引号
+              const afterStart = streamBuf.slice(narratorStartIdx);
+              let escaped = false;
+              for (let ci = 0; ci < afterStart.length; ci++) {
+                if (escaped) { escaped = false; continue; }
+                if (afterStart[ci] === '\\') { escaped = true; continue; }
+                if (afterStart[ci] === '"') { narratorDone = true; break; }
+              }
+            }
+          }
+        } catch(_) {
+          // 单行解析失败不影响整体，继续处理下一行
+        }
       }
     }
   } catch(streamErr) {
@@ -1233,8 +1396,13 @@ async function callDS(userMsg, searchContext) {
     fullText += "__ABORTED__";
   }
 
+  // 流结束，移除临时预览元素（addMessages会正式渲染）
+  if (streamer) streamer.finish();
+
+  // 保存AI回复到对话历史
   t.convoHistory.push({ role:"assistant", content: fullText });
-  if (t.convoHistory.length > 44) t.convoHistory = t.convoHistory.slice(-44);
+  // 防止历史无限增长，保留最近40条
+  if (t.convoHistory.length > 40) t.convoHistory = t.convoHistory.slice(-40);
 
   const wasAborted = fullText.includes("__ABORTED__");
   let clean = fullText.replace("__ABORTED__","").trim()
@@ -1247,7 +1415,14 @@ async function callDS(userMsg, searchContext) {
     if (wasAborted) {
       const m = clean.match(/"content"\s*:\s*"((?:[^"\\]|\\.)*)"/);
       const txt = m ? m[1].replace(/\\n/g,"\n").replace(/\\"/g,'"') : "（已停止生成）";
-      return { stateUpdate:null, messages:[{type:"narrator",content:txt+"\n\n⬛ 已停止生成"}], options:[{id:1,text:"继续刚才的内容",type:"normal"},{id:2,text:"【问伊兹】总结当前状态",type:"iz"}] };
+      return {
+        stateUpdate: null,
+        messages: [{ type:"narrator", content: txt + "\n\n⬛ 已停止生成" }],
+        options: [
+          { id:1, text:"继续刚才的内容", type:"normal" },
+          { id:2, text:"【问伊兹】总结当前状态", type:"iz" }
+        ]
+      };
     }
     throw parseErr;
   }
@@ -1292,12 +1467,38 @@ function applyUpdate(u, resp) {
     });
   }
 
-  if (resp && resp.npcUpdate && resp.npcUpdate.name) {
+  if (resp && resp.npcUpdate) {
     const nu = resp.npcUpdate;
-    const existing = t.npcRoster.find(n => n.id === nu.id || n.name === nu.name);
-    if (existing) Object.assign(existing, nu);
-    else t.npcRoster.push({ id: nu.id || Date.now().toString(), name: nu.name, relation: nu.relation || "neutral", desc: nu.desc || "", lastSeen: nu.lastSeen || "" });
+    if (nu.action === "remove" && nu.id) {
+      // AI主动宣告这个NPC死亡/永久消失，无论重要与否直接移除
+      t.npcRoster = t.npcRoster.filter(n => n.id !== nu.id);
+    } else if (nu.name) {
+      // 新增或更新NPC记录
+      const existing = t.npcRoster.find(n => n.id === nu.id || n.name === nu.name);
+      if (existing) {
+        Object.assign(existing, nu);
+        existing.lastInteractTurn = t.turn; // 刷新最后互动回合
+      } else {
+        t.npcRoster.push({
+          id: nu.id || Date.now().toString(),
+          name: nu.name,
+          relation: nu.relation || "neutral",
+          desc: nu.desc || "",
+          lastSeen: nu.lastSeen || "",
+          important: nu.important === true, // 必须AI明确标true才算重要
+          lastInteractTurn: t.turn,
+        });
+      }
+    }
   }
+
+  // 每回合结束时自动清理过期的普通NPC
+  // important:true 的角色完全不受影响
+  t.npcRoster = t.npcRoster.filter(n => {
+    if (n.important) return true;
+    const lastTurn = n.lastInteractTurn ?? 0;
+    return (t.turn - lastTurn) <= 10;
+  });
 
   if (resp && resp.levelUpdate && resp.levelUpdate.code) {
     const lu = resp.levelUpdate;
@@ -2875,9 +3076,17 @@ function searchNav(dir){
 //  OPTIONS DRAWER
 // ════════════════════════════════════════════════════════
 let _optsData=[], _optsSelected=new Set(), _optsExpanded=new Set();
+// hint懒加载缓存：每次renderOptions时清空，按需生成走向分析
+let _hintCache = {};
 
 function toggleOptsDrawer() { document.getElementById("opts-drawer").classList.toggle("collapsed"); }
-function renderOptions(opts) { _optsData=opts||[]; _optsSelected.clear(); _optsExpanded.clear(); _renderOptsDrawer(); }
+function renderOptions(opts) {
+  _optsData=opts||[];
+  _optsSelected.clear();
+  _optsExpanded.clear();
+  _hintCache = {}; // 每轮新选项出来时清空hint缓存
+  _renderOptsDrawer();
+}
 
 function _renderOptsDrawer() {
   const drawer=document.getElementById("opts-drawer"),body=document.getElementById("opts-drawer-body"),badge=document.getElementById("opts-badge"),footer=document.getElementById("opts-drawer-footer"),sendBtn=document.getElementById("opts-send-btn");
@@ -2901,7 +3110,55 @@ function _renderOptsDrawer() {
 </div>`;
     item.querySelector(".opt-item-text").addEventListener("click",(e)=>{e.stopPropagation();if(!processing)processAction("[选项"+o.id+"] "+o.text);});
     item.querySelector(".opt-item-num").addEventListener("click",(e)=>{e.stopPropagation();if(!processing)processAction("[选项"+o.id+"] "+o.text);});
-    item.querySelector(".opt-expand-btn").addEventListener("click",(e)=>{e.stopPropagation();if(_optsExpanded.has(o.id))_optsExpanded.delete(o.id);else _optsExpanded.add(o.id);_renderOptsDrawer();});
+    item.querySelector(".opt-expand-btn").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      // 如果已经展开了，就收起来
+      if (_optsExpanded.has(o.id)) {
+        _optsExpanded.delete(o.id);
+        _renderOptsDrawer();
+        return;
+      }
+      // 展开：先显示loading状态，再按需生成hint
+      _optsExpanded.add(o.id);
+      _renderOptsDrawer();
+
+      // 如果这个选项的hint已经生成过，直接显示缓存内容即可
+      if (_hintCache[o.id]) {
+        _injectHint(item, o, _hintCache[o.id]);
+        return;
+      }
+
+      // 还没有hint，显示loading提示
+      const hintWrap = item.querySelector(".opt-hint-wrap");
+      if (hintWrap) hintWrap.innerHTML = `<div class="opt-hint-empty" style="color:var(--cold);animation:netSearchPulse 1.2s infinite">▸ 分析走向中…</div>`;
+
+      try {
+        const t = getActive();
+        const p = t.player;
+        // 发一个轻量请求（max_tokens只要80），专门生成走向预测
+        const res = await fetch(DS_API, {
+          method:"POST",
+          headers:{"Content-Type":"application/json","Authorization":"Bearer "+API_KEY},
+          body: JSON.stringify({
+            model: DS_MODEL,
+            max_tokens: 80,
+            temperature: 0.7,
+            messages: [{
+              role: "user",
+              content: `后室游戏。当前：${p.currentLevel} HP:${p.hp} 精神:${p.sanity} 位置:${p.location} 威胁:${p.threat||'无'}。
+对选项"${o.text}"给出1-3条最可能的后续走向，每条不超过12字，只用「·」分隔输出，不要其他任何文字。`
+            }]
+          })
+        });
+        const data = await res.json();
+        const hint = data.choices?.[0]?.message?.content?.trim() || "· 走向未知";
+        _hintCache[o.id] = hint;
+        _injectHint(item, o, hint);
+      } catch(err) {
+        const hintWrap2 = item.querySelector(".opt-hint-wrap");
+        if (hintWrap2) hintWrap2.innerHTML = `<div class="opt-hint-empty">（分析失败，请重试）</div>`;
+      }
+    });
     item.querySelector(".opt-checkbox").addEventListener("click",(e)=>{e.stopPropagation();if(_optsSelected.has(o.id))_optsSelected.delete(o.id);else _optsSelected.add(o.id);_renderOptsDrawer();});
     body.appendChild(item);
   });
@@ -2909,6 +3166,26 @@ function _renderOptsDrawer() {
   else footer.style.display="none";
 }
 
+// hint注入辅助函数：把生成好的hint文字渲染进选项的详情区域
+function _injectHint(item, o, hintText) {
+  const hintWrap = item.querySelector(".opt-hint-wrap");
+  if (!hintWrap) return;
+  const hints = hintText.split('·').map(h => h.trim()).filter(Boolean);
+  const colorMap = { normal:'rgba(74,158,255,0.08)', special:'rgba(200,167,108,0.08)', danger:'rgba(255,74,74,0.08)', iz:'rgba(155,107,255,0.08)' };
+  const idxColorMap = { normal:'#4a9eff', special:'#c8a76c', danger:'#ff7a7a', iz:'#b88aff' };
+  const bg  = colorMap[o.type]  || colorMap.normal;
+  const ic  = idxColorMap[o.type] || idxColorMap.normal;
+  const bdr = bg.replace('0.08','0.2');
+  hintWrap.innerHTML = `
+    <div class="opt-hint-label">▸ 走向分析</div>
+    <div class="opt-hint-rows">${
+      hints.map((h, i) => `
+        <div class="opt-hint-row" style="background:${bg};border:1px solid ${bdr};animation-delay:${i*0.08}s">
+          <span class="opt-hint-idx" style="color:${ic}">${String(i+1).padStart(2,'0')}</span>
+          <span class="opt-hint-text">${esc(h)}</span>
+        </div>`).join('')
+    }</div>`;
+}
 function clearOptSelection(){_optsSelected.clear();_renderOptsDrawer();}
 function sendSelectedOpts(){
   if(!_optsSelected.size||processing)return;

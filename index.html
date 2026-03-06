@@ -1211,7 +1211,7 @@ async function tavilySearch(query) {
 //  作用：在等待AI完整回复时，先把叙事文字逐渐显示出来
 //  让用户看到文字出现，而不是盯着转圈等待
 // ════════════════════════════════════════════════════════
-function createStreamingNarratorEl() {
+function createStreamingNarratorEl(type) {
   const feed = document.getElementById("feed");
 
   // 直接把已有的 typing-row 变形成叙事框
@@ -1225,7 +1225,11 @@ function createStreamingNarratorEl() {
   }
 
   hostEl.className = "msg";
-  hostEl.innerHTML = `<div class="m-narrator" id="stream-narrator-inner" style="min-height:2em"></div>`;
+  if (type === "iz") {
+    hostEl.innerHTML = `<div class="m-iz"><div class="iz-hdr"><div class="iz-av" style="cursor:default">伊</div><div><div class="iz-nm">伊兹 · IZ</div><div class="iz-tg">神经接入 · 仅主角可见</div></div></div><div class="iz-body" id="stream-narrator-inner" style="min-height:2em"></div></div>`;
+  } else {
+    hostEl.innerHTML = `<div class="m-narrator" id="stream-narrator-inner" style="min-height:2em"></div>`;
+  }
 
   const inner = hostEl.querySelector("#stream-narrator-inner");
   let buffer = "";
@@ -1371,7 +1375,8 @@ async function callDS(userMsg, searchContext) {
                 const found = streamBuf.indexOf(marker);
                 if (found !== -1) {
                   narratorStartIdx = found + marker.length;
-                  streamer = createStreamingNarratorEl();
+                  const streamType = marker.includes('"iz"') ? "iz" : "narrator";
+                  streamer = createStreamingNarratorEl(streamType);
                   // 把在找到标记之前已经积累的narrator文字先一次性填进去
                   const initial = extractJsonStringContent(streamBuf.slice(narratorStartIdx));
                   streamer._prevLen = initial.length;

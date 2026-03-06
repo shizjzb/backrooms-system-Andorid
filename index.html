@@ -1213,31 +1213,36 @@ async function tavilySearch(query) {
 // ════════════════════════════════════════════════════════
 function createStreamingNarratorEl() {
   const feed = document.getElementById("feed");
-  const div = document.createElement("div");
-  div.className = "msg";
-  // 创建一个临时的叙事框，流式内容会填充进去
-  // 流结束后这个元素会被移除，由正式的addMessages重新渲染
-  div.innerHTML = `<div class="m-narrator" id="stream-narrator-inner"></div>`;
-  const typing = document.getElementById("typing-row");
-  if (typing) feed.insertBefore(div, typing);
-  else feed.appendChild(div);
 
-  const inner = div.querySelector("#stream-narrator-inner");
+  // 直接把已有的 typing-row 变形成叙事框
+  // 这样用户看到的是"动画消失，文字开始出现"的连续过渡
+  // 而不是"删掉再重建"导致的闪烁感
+  let hostEl = document.getElementById("typing-row");
+  if (!hostEl) {
+    hostEl = document.createElement("div");
+    hostEl.id = "typing-row";
+    feed.appendChild(hostEl);
+  }
+
+  hostEl.className = "msg";
+  hostEl.innerHTML = `<div class="m-narrator" id="stream-narrator-inner" style="min-height:2em"></div>`;
+
+  const inner = hostEl.querySelector("#stream-narrator-inner");
   let buffer = "";
-  let lastRenderedLen = 0;
 
   return {
-    el: div,
-    // 把新到的文字追加进去并滚动到底部
+    el: hostEl,
+    _prevLen: 0,
     append(newText) {
       buffer += newText;
       inner.innerHTML = nl(buffer);
       feed.scrollTop = feed.scrollHeight;
-      lastRenderedLen = buffer.length;
     },
-    // 流结束后移除这个临时元素
     finish() {
-      div.remove();
+      // 流结束，把元素恢复成 typing 的身份让 hideTyping 能找到并隐藏它
+      // addMessages 随后会用完整数据正式重新渲染这条消息
+      hostEl.className = "typing";
+      hostEl.style.display = "none";
     }
   };
 }
@@ -1333,8 +1338,13 @@ async function callDS(userMsg, searchContext) {
   let narratorDone = false;     // narrator内容是否已经结束
 
   // 这两种写法AI都可能输出（有无空格），都要能识别
-  const MARKER1 = `"type":"narrator","content":"`;
-  const MARKER2 = `"type": "narrator", "content": "`;
+  const NARRATOR_MARKERS = [
+    `"type":"narrator","content":"`,
+    `"type": "narrator","content":"`,
+    `"type":"narrator", "content":"`,
+    `"type": "narrator", "content": "`,
+    `"type" : "narrator", "content" : "`,
+  ];
 
   try {
     while (true) {
@@ -1356,17 +1366,18 @@ async function callDS(userMsg, searchContext) {
           // 只在narrator内容结束之前尝试流式预览，避免把JSON结构符号显示出来
           if (!narratorDone) {
             if (narratorStartIdx === -1) {
-              // 还没找到narrator开头，继续搜索
-              let idx = streamBuf.indexOf(MARKER1);
-              if (idx === -1) idx = streamBuf.indexOf(MARKER2);
-              if (idx !== -1) {
-                // 找到了！记录content开始的位置
-                const markerLen = streamBuf.indexOf(MARKER1) !== -1 ? MARKER1.length : MARKER2.length;
-                narratorStartIdx = idx + markerLen;
-                streamer = createStreamingNarratorEl();
-                // 把已经积累的narrator内容先渲染出来
-                const initial = extractJsonStringContent(streamBuf.slice(narratorStartIdx));
-                if (initial) streamer.append(initial);
+              // 还没找到narrator开头，挨个试所有标记变体
+              for (const marker of NARRATOR_MARKERS) {
+                const found = streamBuf.indexOf(marker);
+                if (found !== -1) {
+                  narratorStartIdx = found + marker.length;
+                  streamer = createStreamingNarratorEl();
+                  // 把在找到标记之前已经积累的narrator文字先一次性填进去
+                  const initial = extractJsonStringContent(streamBuf.slice(narratorStartIdx));
+                  streamer._prevLen = initial.length;
+                  if (initial) streamer.append(initial);
+                  break;
+                }
               }
             } else {
               // 已经在narrator content范围内，继续提取新增内容
@@ -1786,24 +1797,31 @@ function showTyping() {
   if (!t) {
     t = document.createElement("div");
     t.id = "typing-row";
-    t.className = "typing";
-    t.innerHTML = `<div style="display:flex;flex-direction:column;gap:5px;width:100%">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="iz-av" style="cursor:default;flex-shrink:0">伊</div>
-        <div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>
-        <div class="typing-lbl">伊兹正在传输…</div>
-      </div>
-      <div id="typing-subtitle" style="display:none;padding-left:32px;min-height:20px"></div>
-    </div>`;
     feed.appendChild(t);
   }
+  // 每次显示前都强制重置成动画状态
+  // 防止上一轮流式渲染留下的残留内容干扰这一轮
+  t.className = "typing";
   t.style.display = "flex";
+  t.innerHTML = `<div style="display:flex;flex-direction:column;gap:5px;width:100%">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="iz-av" style="cursor:default;flex-shrink:0">伊</div>
+      <div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>
+      <div class="typing-lbl">伊兹正在传输…</div>
+    </div>
+    <div id="typing-subtitle" style="display:none;padding-left:32px;min-height:20px"></div>
+  </div>`;
   feed.scrollTop = feed.scrollHeight;
 }
 
 function hideTyping() {
   const t = document.getElementById("typing-row");
-  if (t) t.style.display = "none";
+  if (t) {
+    // 同时重置 className，防止流式渲染把它改成 "msg" 之后
+    // hideTyping 找到元素但样式状态混乱
+    t.className = "typing";
+    t.style.display = "none";
+  }
   hideNetSearching();
 }
 
@@ -3135,10 +3153,18 @@ function _renderOptsDrawer() {
       try {
         const t = getActive();
         const p = t.player;
-        // 发一个轻量请求（max_tokens只要80），专门生成走向预测
+
+        // 设置8秒超时，超时后自动放弃，不让用户无限等待
+        const timeoutSignal = AbortSignal.timeout ? AbortSignal.timeout(8000) : (() => {
+          const ctrl = new AbortController();
+          setTimeout(() => ctrl.abort(), 8000);
+          return ctrl.signal;
+        })();
+
         const res = await fetch(DS_API, {
           method:"POST",
           headers:{"Content-Type":"application/json","Authorization":"Bearer "+API_KEY},
+          signal: timeoutSignal,
           body: JSON.stringify({
             model: DS_MODEL,
             max_tokens: 80,
@@ -3156,7 +3182,9 @@ function _renderOptsDrawer() {
         _injectHint(item, o, hint);
       } catch(err) {
         const hintWrap2 = item.querySelector(".opt-hint-wrap");
-        if (hintWrap2) hintWrap2.innerHTML = `<div class="opt-hint-empty">（分析失败，请重试）</div>`;
+        // 区分超时和其他错误，给用户不同的提示
+        const msg = err.name === "AbortError" ? "（分析超时，可重新展开重试）" : "（分析失败，请重试）";
+        if (hintWrap2) hintWrap2.innerHTML = `<div class="opt-hint-empty">${msg}</div>`;
       }
     });
     item.querySelector(".opt-checkbox").addEventListener("click",(e)=>{e.stopPropagation();if(_optsSelected.has(o.id))_optsSelected.delete(o.id);else _optsSelected.add(o.id);_renderOptsDrawer();});

@@ -1206,47 +1206,6 @@ async function tavilySearch(query) {
 // ════════════════════════════════════════════════════════
 //  DEEPSEEK API CALL (streaming)
 // ════════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════════
-//  流式渲染辅助函数
-//  作用：在等待AI完整回复时，先把叙事文字逐渐显示出来
-//  让用户看到文字出现，而不是盯着转圈等待
-// ════════════════════════════════════════════════════════
-function createStreamingNarratorEl(type) {
-  const feed = document.getElementById("feed");
-
-  let hostEl = document.getElementById("typing-row");
-  if (!hostEl) {
-    hostEl = document.createElement("div");
-    hostEl.id = "typing-row";
-    feed.appendChild(hostEl);
-  }
-
-  hostEl.className = "msg";
-  if (type === "iz") {
-    hostEl.innerHTML = `<div class="m-iz"><div class="iz-hdr"><div class="iz-av" style="cursor:default">伊</div><div><div class="iz-nm">伊兹 · IZ</div><div class="iz-tg">神经接入 · 仅主角可见</div></div></div><div class="iz-body" id="stream-narrator-inner" style="min-height:2em"></div></div>`;
-  } else {
-    hostEl.innerHTML = `<div class="m-narrator" id="stream-narrator-inner" style="min-height:2em"></div>`;
-  }
-
-  const inner = hostEl.querySelector("#stream-narrator-inner");
-  let buffer = "";
-
-  return {
-    el: hostEl,
-    _prevLen: 0,
-    append(newText) {
-      buffer += newText;
-      inner.innerHTML = nl(buffer);
-      feed.scrollTop = feed.scrollHeight;
-    },
-    finish() {
-      // 流结束，把元素恢复成 typing 的身份让 hideTyping 能找到并隐藏它
-      // addMessages 随后会用完整数据正式重新渲染这条消息
-      hostEl.className = "typing";
-      hostEl.style.display = "none";
-    }
-  };
-}
 
 // 从JSON字符串片段里提取content字段的内容
 // 遇到未转义的引号就停止，这标志着content字段结束了
@@ -1278,6 +1237,55 @@ function extractJsonStringContent(str) {
 // ════════════════════════════════════════════════════════
 //  DEEPSEEK API CALL (streaming + 流式预览)
 // ════════════════════════════════════════════════════════
+// 创建实时打字机的DOM容器，插入到feed里
+// 这个容器会在流式传输过程中持续接收新字符
+function createLiveTypewriterEl(type) {
+  const feed = document.getElementById("feed");
+  const typing = document.getElementById("typing-row");
+  const div = document.createElement("div");
+  div.className = "msg";
+  div.id = "live-typewriter";
+
+  if (type === "iz") {
+    div.innerHTML = `<div class="m-iz">
+      <div class="iz-hdr">
+        <div class="iz-av" style="cursor:default">伊</div>
+        <div>
+          <div class="iz-nm">伊兹 · IZ</div>
+          <div class="iz-tg">神经接入 · 仅主角可见</div>
+        </div>
+      </div>
+      <div class="iz-body" id="live-typewriter-inner"></div>
+    </div>`;
+  } else {
+    div.innerHTML = `<div class="m-narrator">
+      <span id="live-typewriter-inner"></span>
+    </div>`;
+  }
+
+  // 插在typing动画之前，让它看起来像是typing动画变成了文字
+  if (typing) feed.insertBefore(div, typing);
+  else feed.appendChild(div);
+  return div;
+}
+
+// 把新收到的字符追加到实时打字机容器里
+// 注意：这里不用setInterval，而是直接追加——因为网络传输本身的速度
+// 已经自然地制造了逐字出现的效果，不需要额外模拟延迟
+function appendToLiveTypewriter(el, newChars) {
+  if (!el) return;
+  const inner = document.getElementById("live-typewriter-inner");
+  if (!inner) return;
+  const feed = document.getElementById("feed");
+  for (const char of newChars) {
+    if (char === "\n") inner.innerHTML += "<br>";
+    else if (char === "<") inner.innerHTML += "&lt;";
+    else if (char === ">") inner.innerHTML += "&gt;";
+    else if (char === "&") inner.innerHTML += "&amp;";
+    else inner.innerHTML += char;
+  }
+  feed.scrollTop = feed.scrollHeight;
+}
 async function callDS(userMsg, searchContext) {
   const t = getActive();
   let enrichedMsg = searchContext
@@ -1331,6 +1339,48 @@ async function callDS(userMsg, searchContext) {
   const decoder = new TextDecoder();
   let fullText = "";
 
+  // ── 实时打字机所需的状态变量 ──
+  let streamBuf = "";           // 累积原始流文本，用于寻找内容标记
+  let narratorStartIdx = -1;   // narrator/iz的content字段在streamBuf里的起始位置
+  let narratorDone = false;    // content字段是否已结束
+  let liveEl = null;           // 实时打字机的DOM容器
+  let liveStreamType = "";     // "iz" 或 "narrator"
+  let liveRenderedLen = 0;     // 已经渲染到打字机里的字符数
+
+  // narrator和iz的content字段在JSON里可能有多种空格写法，全部列出来
+  const NARRATOR_MARKERS = [
+    `"type":"narrator","content":"`,
+    `"type": "narrator","content":"`,
+    `"type":"narrator", "content":"`,
+    `"type": "narrator", "content": "`,
+    `"type" : "narrator", "content" : "`,
+    `"type":"iz","content":"`,
+    `"type": "iz","content":"`,
+    `"type":"iz", "content":"`,
+    `"type": "iz", "content": "`,
+  ];
+
+  // ── 实时打字机所需的状态变量 ──
+  let streamBuf = "";           // 累积原始流文本，用于寻找内容标记
+  let narratorStartIdx = -1;   // narrator/iz的content字段在streamBuf里的起始位置
+  let narratorDone = false;    // content字段是否已结束
+  let liveEl = null;           // 实时打字机的DOM容器
+  let liveStreamType = "";     // "iz" 或 "narrator"
+  let liveRenderedLen = 0;     // 已经渲染到打字机里的字符数
+
+  // narrator和iz的content字段在JSON里可能有多种空格写法，全部列出来
+  const NARRATOR_MARKERS = [
+    `"type":"narrator","content":"`,
+    `"type": "narrator","content":"`,
+    `"type":"narrator", "content":"`,
+    `"type": "narrator", "content": "`,
+    `"type" : "narrator", "content" : "`,
+    `"type":"iz","content":"`,
+    `"type": "iz","content":"`,
+    `"type":"iz", "content":"`,
+    `"type": "iz", "content": "`,
+  ];
+
   // ── 流式预览状态追踪 ──
   // 我们会在流里寻找第一个narrator的content字段，找到后实时渲染
   let streamer = null;          // 流式渲染器实例
@@ -1364,8 +1414,46 @@ async function callDS(userMsg, searchContext) {
           const delta = JSON.parse(data).choices?.[0]?.delta?.content || "";
           if (!delta) continue;
 
-          fullText  += delta;
+          fullText += delta;
           streamBuf += delta;
+
+          // ── 实时打字机：边接收边显示 ──
+          // 只处理narrator和iz类型，其他类型等JSON完整后再渲染
+          if (!narratorDone) {
+            // 第一步：如果还没找到内容开头，就去streamBuf里找标记
+            if (narratorStartIdx === -1) {
+              for (const marker of NARRATOR_MARKERS) {
+                const found = streamBuf.indexOf(marker);
+                if (found !== -1) {
+                  narratorStartIdx = found + marker.length;
+                  // 判断是iz还是narrator，创建对应的打字机容器
+                  liveStreamType = marker.includes('"iz"') ? "iz" : "narrator";
+                  liveEl = createLiveTypewriterEl(liveStreamType);
+                  // 把找到标记之前已经积累的内容先填进去
+                  const initial = extractJsonStringContent(streamBuf.slice(narratorStartIdx));
+                  if (initial) appendToLiveTypewriter(liveEl, initial);
+                  liveRenderedLen = initial.length;
+                  break;
+                }
+              }
+            } else {
+              // 第二步：已经在内容范围内，把新增的字符追加到打字机容器
+              const allContent = extractJsonStringContent(streamBuf.slice(narratorStartIdx));
+              if (allContent.length > liveRenderedLen) {
+                const newChars = allContent.slice(liveRenderedLen);
+                appendToLiveTypewriter(liveEl, newChars);
+                liveRenderedLen = allContent.length;
+              }
+              // 检查内容是否结束（遇到未转义的引号说明content字段结束了）
+              const afterStart = streamBuf.slice(narratorStartIdx);
+              let escaped = false;
+              for (let ci = 0; ci < afterStart.length; ci++) {
+                if (escaped) { escaped = false; continue; }
+                if (afterStart[ci] === '\\') { escaped = true; continue; }
+                if (afterStart[ci] === '"') { narratorDone = true; break; }
+              }
+            }
+          }
 
           // 只在narrator内容结束之前尝试流式预览，避免把JSON结构符号显示出来
           if (!narratorDone) {
@@ -1413,7 +1501,11 @@ async function callDS(userMsg, searchContext) {
   }
 
   // 流结束，移除临时预览元素（addMessages会正式渲染）
-  if (streamer) streamer.finish();
+  // 流结束后，把实时打字机容器标记为"已完成"
+  // 后续addMessages处理到同类型消息时会检测到这个标记并跳过重复渲染
+  if (liveEl) {
+    liveEl.dataset.liveComplete = liveStreamType; // 记录类型，供addMessages检查
+  }
 
   // 保存AI回复到对话历史
   t.convoHistory.push({ role:"assistant", content: fullText });
@@ -1780,6 +1872,83 @@ function addMsgToFeed(msgObj, save=true) {
   if (!el) return;
   if (typing) feed.insertBefore(el, typing);
   else feed.appendChild(el);
+
+  // ── 打字机效果（通用）──
+  // 根据消息类型找到对应的文字容器，然后逐字显示
+  // 支持：iz（伊兹）、narrator（叙事者）、dialog（NPC对话）、
+  //       devour（暴食事件）、system（系统消息）、levelup（升级）
+  const typewriterConfig = (() => {
+    switch (msgObj.type) {
+      case "iz":
+        // 伊兹的文字在 .iz-body 里
+        return { el: el.querySelector(".iz-body"), text: msgObj.content };
+      case "narrator":
+        // 叙事者文字就在 .m-narrator 里
+        return { el: el.querySelector(".m-narrator"), text: msgObj.content };
+      case "dialog":
+        // NPC对话的文字在 .dlg-tx 里，注意原始渲染有引号，我们保留它
+        return { el: el.querySelector(".dlg-tx"), text: '"' + (msgObj.content || "") + '"' };
+      case "devour":
+        // 暴食事件的描述在 .dv-body 里
+        return { el: el.querySelector(".dv-body"), text: (msgObj.description || "") };
+      case "system":
+        // 系统消息整个 .m-system 就是文字，但它带有图标前缀，不太适合打字机
+        // 所以这里跳过，保持瞬间显示
+        return null;
+      case "levelup":
+        // 升级消息在 .m-levelup 里
+        return { el: el.querySelector(".m-levelup"), text: msgObj.content };
+      default:
+        // net（BackNet帖子）、scene-img、error 等结构复杂，保持原样瞬间显示
+        return null;
+    }
+  })();
+
+  if (typewriterConfig && typewriterConfig.el && typewriterConfig.text) {
+    const targetEl = typewriterConfig.el;
+    const fullText = typewriterConfig.text;
+
+    // 先清空容器，准备逐字填入
+    targetEl.innerHTML = "";
+    let charIdx = 0;
+
+    const typeTimer = setInterval(() => {
+      if (charIdx >= fullText.length) {
+        // 打完了，用原始渲染方式做最终收尾（确保换行等格式正确）
+        clearInterval(typeTimer);
+
+        // dialog 类型原本渲染是带引号的 dlg-tx，我们直接用 nl() 收尾
+        if (msgObj.type === "dialog") {
+          targetEl.innerHTML = nl('"' + (msgObj.content || "") + '"');
+        } else {
+          targetEl.innerHTML = nl(fullText);
+        }
+
+        feed.scrollTop = feed.scrollHeight;
+        return;
+      }
+
+      const char = fullText[charIdx];
+      // 对特殊HTML字符做转义，防止渲染错乱
+      if (char === "\n") {
+        targetEl.innerHTML += "<br>";
+      } else if (char === "<") {
+        targetEl.innerHTML += "&lt;";
+      } else if (char === ">") {
+        targetEl.innerHTML += "&gt;";
+      } else if (char === "&") {
+        targetEl.innerHTML += "&amp;";
+      } else {
+        targetEl.innerHTML += char;
+      }
+
+      charIdx++;
+      // 每打几个字才滚动一次，避免频繁滚动影响性能
+      if (charIdx % 5 === 0) feed.scrollTop = feed.scrollHeight;
+
+    }, 22); // 22毫秒一个字，可以自己调整这个数值
+  }
+
   feed.scrollTop = feed.scrollHeight;
   if (save) {
     const t = getActive();
@@ -1792,7 +1961,30 @@ function addMsgToFeed(msgObj, save=true) {
 
 function addMessages(msgs, searchRef) {
   if (searchRef) addMsgToFeed({ type:"search-ref", content: searchRef.substring(0,120)+"…" });
-  msgs.forEach((m,i) => setTimeout(() => addMsgToFeed(m), i*110));
+
+  // 检查是否有已经实时渲染过的消息类型，如果有就跳过第一条同类型的消息
+  // 这样避免打字机动画被重复播放两遍
+  const liveEl = document.getElementById("live-typewriter");
+  const liveCompleteType = liveEl?.dataset.liveComplete || null;
+  let skippedLive = false;
+
+  msgs.forEach((m, i) => setTimeout(() => {
+    // 如果这条消息的类型和实时渲染过的类型一致，跳过第一条，并把实时容器保留在feed里
+    if (!skippedLive && liveCompleteType && m.type === liveCompleteType) {
+      skippedLive = true;
+      // 把实时打字机容器的id清掉，让它变成普通消息留在feed里
+      if (liveEl) {
+        liveEl.removeAttribute("id");
+        // 同时把它存入renderedMessages，保证刷新页面后还在
+        const t = getActive();
+        t.renderedMessages = t.renderedMessages || [];
+        if (t.renderedMessages.length > 60) t.renderedMessages.shift();
+        t.renderedMessages.push(m); // 存的是原始消息对象，方便后续重新渲染
+      }
+      return; // 跳过这条，不再调用addMsgToFeed
+    }
+    addMsgToFeed(m);
+  }, i * 110));
   setTimeout(() => { document.getElementById("feed").scrollTop = 99999; }, msgs.length*110+200);
 }
 

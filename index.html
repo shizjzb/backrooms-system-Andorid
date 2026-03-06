@@ -1,0 +1,3035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="后室·暴食者">
+<meta name="theme-color" content="#06060a">
+<link rel="manifest" href="manifest.json">
+<title>后室·暴食者</title>
+<style>
+@import url('https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@300;400;600&family=Noto+Sans+SC:wght@300;400;500&family=Share+Tech+Mono&display=swap');
+:root{
+  --bg0:#06060a;--bg1:#0d0d15;--bg2:#121219;--bg3:#1a1a22;--bg4:#222230;
+  --gold:#c8a76c;--gold2:#8a6e3a;--cold:#4a9eff;--danger:#ff4a4a;
+  --green:#3aff7a;--purple:#9b6bff;--iz:#e8b0d8;--orange:#ff9a3a;
+  --txt:#e0dcd4;--txt2:#8a867e;--txt3:#3a3834;
+  --bdr:#232230;--bdr2:#38354a;
+  --devour:#ff9a3a;--devour2:#c8500a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg0)}
+body{font-family:'Noto Sans SC',sans-serif;font-size:15px;color:var(--txt)}
+
+/* ══ SETUP SCREEN ══ */
+#setup-screen{position:fixed;inset:0;background:var(--bg0);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;z-index:300;padding:24px;overflow-y:auto;padding-bottom:env(keyboard-inset-height,120px)}
+.setup-logo{font-family:'Noto Serif SC',serif;font-size:30px;color:var(--gold);letter-spacing:6px;text-shadow:0 0 30px rgba(200,167,108,0.5);margin-bottom:6px;text-align:center}
+.setup-sub{color:var(--txt2);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;margin-bottom:28px;text-align:center}
+.setup-card{width:100%;max-width:400px;background:var(--bg1);border:1px solid var(--bdr2);border-radius:16px;padding:22px;margin-bottom:14px}
+.setup-section-title{color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:10.5px;letter-spacing:2px;margin-bottom:12px}
+.setup-desc{color:var(--txt2);font-size:12.5px;line-height:1.85;margin-bottom:14px}
+.setup-desc a{color:var(--cold);text-decoration:none}
+.key-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.key-label{color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;white-space:nowrap;min-width:80px}
+.key-input{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:8px;padding:9px 12px;color:var(--txt);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;transition:border-color 0.2s}
+.key-input:focus{border-color:var(--gold)}
+.key-input::placeholder{color:var(--txt3)}
+.start-btn{width:100%;max-width:400px;background:linear-gradient(135deg,#c8a76c,#8a6e3a);border:none;border-radius:10px;padding:14px;color:#06060a;font-family:'Noto Sans SC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:2px;transition:transform 0.15s,opacity 0.2s;margin-top:4px}
+.start-btn:active{transform:scale(0.97)}
+.start-btn:disabled{opacity:0.45}
+.setup-warn{color:var(--danger);font-size:11.5px;font-family:'Share Tech Mono',monospace;margin-top:8px;display:none;text-align:center;max-width:400px}
+.model-preset-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.model-chip{flex-shrink:0;background:var(--bg2);border:1px solid var(--bdr2);border-radius:18px;padding:5px 12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--txt2);cursor:pointer;transition:all 0.18s;-webkit-user-select:none;user-select:none;white-space:nowrap}
+.model-chip.active-chip{border-color:var(--gold);background:rgba(200,167,108,0.1);color:var(--gold)}
+.custom-endpoint-block{background:var(--bg0);border:1px solid var(--bdr);border-radius:10px;padding:12px 13px;margin-top:2px;display:none}
+.custom-endpoint-block.open{display:block}
+.custom-endpoint-block .ep-row{display:flex;gap:7px;align-items:center;margin-bottom:8px}
+.custom-endpoint-block .ep-row:last-child{margin-bottom:0}
+.custom-endpoint-block .ep-label{color:var(--txt2);font-family:'Share Tech Mono',monospace;font-size:10.5px;min-width:68px;flex-shrink:0}
+.custom-endpoint-block .ep-input{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:7px;padding:7px 10px;color:var(--txt);font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;transition:border-color 0.2s}
+.custom-endpoint-block .ep-input:focus{border-color:var(--gold)}
+.custom-endpoint-block .ep-input::placeholder{color:var(--txt3)}
+
+/* ══ LOADING ══ */
+#loading-screen{position:fixed;inset:0;background:var(--bg0);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:18px}
+.ld-title{font-family:'Noto Serif SC',serif;font-size:28px;color:var(--gold);letter-spacing:5px}
+.ld-sub{color:var(--txt2);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px}
+.ld-spin{width:38px;height:38px;border:2px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-msg{color:var(--txt2);font-size:12px;text-align:center;max-width:260px;line-height:1.7;font-family:'Share Tech Mono',monospace;min-height:36px}
+
+/* ══ GAME SCREEN ══ */
+#game-screen{position:fixed;inset:0;display:none;flex-direction:column;background:var(--bg0)}
+
+/* STATUS BAR */
+.sbar{flex-shrink:0;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:6px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;align-items:center}
+.sbar::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;display:flex;align-items:center;gap:4px;background:var(--bg2);border:1px solid var(--bdr);border-radius:20px;padding:3px 9px;font-size:10.5px;font-family:'Share Tech Mono',monospace;white-space:nowrap}
+.chip .lbl{color:var(--txt2)}.chip .v{color:var(--gold);font-weight:600}
+.chip.hp .v{color:var(--green)}.chip.san .v{color:var(--cold)}.chip.dvr .v{color:var(--devour)}
+.chip.thr{border-color:rgba(255,74,74,0.4)}.chip.thr .v{color:var(--danger)}
+.sbar-spacer{flex:1}
+
+/* GAME MAIN */
+.game-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+
+/* FEED */
+.feed{flex:1;overflow-y:auto;padding:14px 12px 6px;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--bdr2) transparent;min-height:0}
+.feed::-webkit-scrollbar{width:3px}.feed::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+
+/* MESSAGES */
+.msg{margin-bottom:14px;animation:fsi 0.35s ease both;position:relative;cursor:pointer}
+@keyframes fsi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.scene-img-wrap{margin-bottom:10px;border-radius:10px;overflow:hidden;position:relative;background:var(--bg2);min-height:120px;border:1px solid var(--bdr)}
+.scene-img{width:100%;display:block;border-radius:10px;max-height:220px;object-fit:cover}
+.scene-img-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:11px;font-family:'Share Tech Mono',monospace}
+
+.m-narrator{background:linear-gradient(135deg,#10101a,#0d0d16);border:1px solid var(--bdr);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:13px 15px;font-family:'Noto Serif SC',serif;font-size:14px;line-height:2.1}
+.m-iz{background:linear-gradient(135deg,#140c1c,#0f0b16);border:1px solid #352548;border-left:3px solid var(--iz);border-radius:0 10px 10px 0;padding:13px 15px}
+.iz-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.iz-av{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle,#e8b0d8,#9b6bff);display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700;flex-shrink:0;box-shadow:0 0 14px rgba(232,176,216,0.35);cursor:pointer;transition:box-shadow 0.2s}
+.iz-av:active{box-shadow:0 0 22px rgba(232,176,216,0.7)}
+.iz-nm{color:var(--iz);font-size:11px;font-weight:600;letter-spacing:1px}
+.iz-tg{color:var(--txt2);font-size:10px;font-family:'Share Tech Mono',monospace}
+.iz-body{color:#d4c0e4;font-size:13.5px;line-height:2}
+
+.m-dialog{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px}
+.dlg-sp{font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:5px;font-family:'Share Tech Mono',monospace}
+.dlg-tx{font-family:'Noto Serif SC',serif;font-size:13.5px;line-height:2.1}
+
+.m-net{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:12px 13px}
+.net-hdr{color:var(--cold);font-size:11px;font-family:'Share Tech Mono',monospace;margin-bottom:10px}
+.net-post{border-bottom:1px solid var(--bdr);padding:8px 0}
+.net-post:last-child{border-bottom:none;padding-bottom:0}
+.net-u{color:var(--cold);font-size:11px;font-family:'Share Tech Mono',monospace;margin-bottom:3px}
+.net-c{color:var(--txt);font-size:13px;line-height:1.85}
+.net-r{color:var(--txt2);font-size:12px;margin-top:5px;padding-left:10px;border-left:2px solid var(--bdr2)}
+.net-t{color:var(--txt3);font-size:10px;margin-top:4px;font-family:'Share Tech Mono',monospace}
+
+.m-devour{background:radial-gradient(ellipse at center,rgba(255,154,58,0.13),transparent 70%);border:2px solid var(--devour);border-radius:12px;padding:16px;text-align:center}
+.dv-title{color:var(--devour);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;margin-bottom:8px}
+.dv-body{color:var(--txt);font-size:13px;line-height:1.85}
+.dv-gain{color:var(--devour);font-size:12px;margin-top:9px;font-family:'Share Tech Mono',monospace}
+
+.m-system{text-align:center;color:var(--danger);font-family:'Share Tech Mono',monospace;font-size:11.5px;letter-spacing:2px;padding:8px;border:1px solid rgba(255,74,74,0.25);border-radius:6px;background:rgba(255,74,74,0.06);animation:pd 2s infinite}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:0.6}}
+
+.m-levelup{text-align:center;padding:15px;background:radial-gradient(ellipse at center,rgba(255,154,58,0.13),transparent 70%);border:1px solid var(--devour);border-radius:12px;color:var(--devour);font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;line-height:2.1}
+.m-error{background:rgba(255,74,74,0.07);border:1px solid rgba(255,74,74,0.3);border-radius:10px;padding:12px 14px;color:var(--danger);font-size:13px;line-height:1.8}
+.m-search-ref{background:rgba(74,158,255,0.05);border:1px solid rgba(74,158,255,0.2);border-radius:8px;padding:8px 12px;font-size:11.5px;color:var(--txt2);font-family:'Share Tech Mono',monospace;margin-bottom:8px}
+.m-search-ref span{color:var(--cold)}
+
+/* TYPING */
+.typing{display:flex;align-items:flex-start;gap:8px;padding:6px 2px;margin-bottom:10px}
+.typing-dots{display:flex;gap:4px;align-items:center}
+.td{width:6px;height:6px;background:var(--iz);border-radius:50%;animation:bnc 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes bnc{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+.typing-lbl{color:var(--iz);font-size:11px;font-family:'Share Tech Mono',monospace}
+/* Subtitle uses its own named animation to avoid conflict with td dots */
+@keyframes netSearchPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.net-search-dot{width:5px;height:5px;border-radius:50%;background:var(--cold);display:inline-block;animation:netSearchPulse 1.2s infinite;flex-shrink:0;vertical-align:middle;margin-right:4px}
+
+/* OPTIONS DRAWER */
+.opts-drawer{flex-shrink:0;background:var(--bg1);border-top:1px solid var(--bdr);display:flex;flex-direction:column;max-height:50vh;transition:max-height 0.28s cubic-bezier(0.4,0,0.2,1)}
+.opts-drawer.collapsed{max-height:38px;overflow:hidden}
+.opts-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:6px 11px;cursor:pointer;flex-shrink:0;user-select:none;-webkit-user-select:none}
+.opts-drawer-title{color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;display:flex;align-items:center;gap:6px}
+.opts-drawer-badge{background:var(--gold2);color:var(--gold);font-size:10px;border-radius:8px;padding:1px 6px;font-family:'Share Tech Mono',monospace}
+.opts-drawer-badge.has-sel{background:rgba(200,167,108,0.25);border:1px solid var(--gold)}
+.opts-drawer-toggle{color:var(--txt2);font-size:13px;transition:transform 0.25s;flex-shrink:0}
+.opts-drawer.collapsed .opts-drawer-toggle{transform:rotate(180deg)}
+.opts-drawer-body{overflow-y:auto;padding:0 11px 9px;scrollbar-width:none;flex:1}
+.opts-drawer-body::-webkit-scrollbar{display:none}
+.opt-item{background:var(--bg2);border:1px solid var(--bdr);border-radius:9px;margin-bottom:6px;overflow:hidden;transition:border-color 0.18s}
+.opt-item.selected{border-color:rgba(200,167,108,0.6);background:rgba(200,167,108,0.05)}
+.opt-item.special{border-color:rgba(200,167,108,0.3)}
+.opt-item.danger{border-color:rgba(255,74,74,0.25)}
+.opt-item.iz-type{border-color:rgba(232,176,216,0.25)}
+.opt-item-header{display:flex;align-items:center;padding:9px 12px;cursor:pointer;gap:8px;-webkit-user-select:none;user-select:none}
+.opt-item-num{display:inline-flex;align-items:center;justify-content:center;background:var(--bg0);border:1px solid var(--bdr2);border-radius:4px;width:20px;height:20px;font-size:10px;font-family:'Share Tech Mono',monospace;color:var(--gold);flex-shrink:0}
+.opt-item-text{color:var(--txt);font-size:13px;flex:1;line-height:1.5}
+.opt-item-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.opt-checkbox{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--bdr2);background:var(--bg0);display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;cursor:pointer}
+.opt-item.selected .opt-checkbox{background:var(--gold2);border-color:var(--gold)}
+.opt-checkbox::after{content:'✓';color:var(--gold);font-size:10px;opacity:0;transition:opacity 0.15s}
+.opt-item.selected .opt-checkbox::after{opacity:1}
+.opt-expand-btn{background:none;border:none;color:var(--txt3);font-size:11px;font-family:'Share Tech Mono',monospace;cursor:pointer;padding:2px 4px;transition:color 0.15s;flex-shrink:0}
+.opt-expand-btn:active{color:var(--gold)}
+.opt-item-detail{display:none;padding:0 12px 10px 40px;color:var(--txt2);font-size:12.5px;line-height:1.8;border-top:1px solid var(--bdr)}
+.opt-item-detail.open{display:block}
+.opts-drawer-footer{padding:7px 11px;border-top:1px solid var(--bdr);display:flex;gap:8px;align-items:center;flex-shrink:0}
+.opts-send-btn{flex:1;background:linear-gradient(135deg,#c8a76c,#9a7438);border:none;border-radius:8px;padding:8px 14px;color:#06060a;font-family:'Noto Sans SC',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:transform 0.15s,opacity 0.2s}
+.opts-send-btn:active{transform:scale(0.97)}
+.opts-send-btn:disabled{opacity:0.4}
+.opts-clear-btn{background:var(--bg3);border:1px solid var(--bdr2);border-radius:8px;padding:8px 12px;color:var(--txt2);font-size:12px;font-family:'Share Tech Mono',monospace;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.opts-clear-btn:active{border-color:var(--danger);color:var(--danger)}
+
+/* BOTTOM INPUT BAR */
+#bbar-wrap{flex-shrink:0;background:var(--bg1);border-top:1px solid var(--bdr);position:relative}
+.input-quote-wrap{background:var(--bg2);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:5px 10px;margin:4px 11px 0;display:flex;align-items:center;gap:8px}
+.input-quote-wrap .iq-text{color:var(--txt2);font-size:11.5px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.input-quote-wrap .iq-close{background:none;border:none;color:var(--txt3);font-size:16px;cursor:pointer;padding:0 2px;line-height:1}
+.bbar{padding:7px 11px;display:flex;gap:8px;align-items:center;position:relative}
+
+/* NET ICON — left of input, right of plus btn */
+#net-icon{
+  position:absolute;
+  left:54px;
+  top:2px;
+  z-index:10;
+  display:flex;align-items:center;justify-content:center;
+  width:22px;height:22px;
+  background:var(--bg1);
+  border:1.5px solid var(--bdr2);
+  border-radius:50%;
+  cursor:pointer;
+  transition:all 0.22s;
+  padding:0;
+}
+#net-icon.net-on{border-color:rgba(74,158,255,0.7);background:rgba(74,158,255,0.08);box-shadow:0 0 8px rgba(74,158,255,0.25)}
+#net-icon svg{display:block}
+
+/* + button */
+.plus-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.18s;line-height:1}
+.plus-btn:active{border-color:var(--gold);color:var(--gold)}
+.plus-btn.open{border-color:var(--gold);color:var(--gold);background:rgba(200,167,108,0.08)}
+/* 💜 iz button */
+.iz-quick-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--bdr2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.18s}
+.iz-quick-btn:active{border-color:var(--iz);background:rgba(232,176,216,0.1)}
+.cinput{flex:1;background:var(--bg2);border:1px solid var(--bdr);border-radius:18px;padding:8px 13px 8px 20px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:13px;outline:none;min-width:0}
+.cinput:focus{border-color:var(--bdr2)}.cinput::placeholder{color:var(--txt3)}
+.stop-btn{display:none;background:rgba(255,74,74,0.12);border:1px solid rgba(255,74,74,0.45);border-radius:18px;padding:8px 14px;color:var(--danger);font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;flex-shrink:0;transition:background 0.15s;letter-spacing:1px;white-space:nowrap}
+.stop-btn:active{background:rgba(255,74,74,0.25)}
+.stop-btn.visible{display:block}
+.sbtn{background:linear-gradient(135deg,#c8a76c,#9a7438);border:none;border-radius:18px;padding:8px 15px;color:#06060a;font-family:'Noto Sans SC',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;transition:transform 0.15s}
+.sbtn:active{transform:scale(0.94)}.sbtn:disabled{opacity:0.5}
+
+/* ══ BOTTOM NAV ══ */
+.nav{flex-shrink:0;background:var(--bg1);border-top:1px solid var(--bdr);display:flex;justify-content:space-around;padding:5px 0}
+.nbtn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:4px 10px;border-radius:7px;color:var(--txt2);font-size:9.5px;font-family:'Noto Sans SC',sans-serif;transition:color 0.18s;-webkit-user-select:none;user-select:none}
+.nbtn .ni{display:flex;align-items:center;justify-content:center;width:28px;height:28px}
+.nbtn:active .ni svg .icon-stroke{stroke:var(--gold)}
+.nbtn:active .ni svg .icon-fill{fill:var(--gold)}
+.nbtn:active{color:var(--gold)}
+
+/* ══ MORE MENU GRID — slides from right ══ */
+.more-menu-bg{position:fixed;inset:0;z-index:50;background:transparent}
+.more-menu{
+  position:fixed;
+  bottom:70px;
+  right:8px;
+  width:min(72vw,240px);
+  background:var(--bg1);
+  border:1px solid var(--bdr2);
+  border-radius:16px;
+  z-index:51;
+  box-shadow:0 8px 32px rgba(0,0,0,0.7);
+  padding:12px 10px 10px;
+  animation:slideFromRight 0.24s cubic-bezier(0.4,0,0.2,1);
+  transform-origin: bottom right;
+}
+@keyframes slideFromRight{
+  from{opacity:0;transform:translateX(28px) scale(0.94)}
+  to{opacity:1;transform:translateX(0) scale(1)}
+}
+.more-menu-title{color:var(--txt3);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;padding:0 4px 8px;border-bottom:1px solid var(--bdr);margin-bottom:8px}
+.more-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.more-grid-item{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  background:var(--bg2);border:1px solid var(--bdr);border-radius:11px;
+  padding:11px 6px 8px;
+  cursor:pointer;transition:border-color 0.18s,background 0.18s;
+  -webkit-user-select:none;user-select:none;
+}
+.more-grid-item:active{border-color:var(--gold2);background:rgba(200,167,108,0.07)}
+.more-grid-item .mg-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.more-grid-item .mg-label{color:var(--txt2);font-size:10.5px;font-family:'Noto Sans SC',sans-serif;text-align:center;line-height:1.3}
+
+/* ══ PLUS MENU OVERLAY ══ */
+.plus-menu-bg{position:fixed;inset:0;z-index:50;background:transparent}
+.plus-menu{position:fixed;bottom:130px;left:10px;width:min(88vw,320px);background:var(--bg1);border:1px solid var(--bdr2);border-radius:16px;z-index:51;box-shadow:0 8px 32px rgba(0,0,0,0.6);animation:slideUpSmall 0.22s cubic-bezier(0.4,0,0.2,1)}
+@keyframes slideUpSmall{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.pm-section{padding:10px 12px 6px}
+.pm-section-title{color:var(--txt3);font-family:'Share Tech Mono',monospace;font-size:9.5px;letter-spacing:2px;margin-bottom:8px;padding:0 2px}
+.pm-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:background 0.15s;-webkit-user-select:none;user-select:none}
+.pm-item:active{background:var(--bg3)}
+.pm-item .pm-icon{font-size:17px;flex-shrink:0;width:24px;text-align:center}
+.pm-item .pm-label{color:var(--txt);font-size:13px;flex:1}
+.pm-item .pm-sub{color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace}
+.pm-divider{height:1px;background:var(--bdr);margin:4px 12px}
+
+/* Style chips inside plus menu */
+.pm-styles{display:flex;flex-wrap:wrap;gap:6px;padding:4px 2px 8px}
+.style-chip{flex-shrink:0;padding:5px 11px;border-radius:18px;border:1px solid var(--bdr2);background:var(--bg2);color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;cursor:pointer;transition:all 0.18s;-webkit-user-select:none;user-select:none}
+.style-chip:active,.style-chip.active-style{border-color:var(--gold);background:rgba(200,167,108,0.1);color:var(--gold)}
+/* User-created style chips */
+.style-chip.user-style{border-color:rgba(155,107,255,0.3);color:var(--txt2)}
+.style-chip.user-style.active-style{border-color:var(--purple);background:rgba(155,107,255,0.1);color:var(--purple)}
+.style-chip-wrap{position:relative;display:inline-flex;align-items:center}
+.style-chip-del{display:none;position:absolute;top:-5px;right:-5px;width:15px;height:15px;border-radius:50%;background:var(--danger);border:1.5px solid var(--bg1);color:white;font-size:9px;cursor:pointer;align-items:center;justify-content:center;line-height:1;z-index:2;font-weight:700}
+.style-chip-wrap:hover .style-chip-del,.style-chip-wrap.show-del .style-chip-del{display:flex}
+/* Add style button */
+.style-add-btn{width:100%;background:none;border:1px dashed var(--bdr2);border-radius:18px;padding:5px 12px;color:var(--txt3);font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;margin-top:4px;transition:all 0.15s;text-align:center;display:block}
+.style-add-btn:active{border-color:var(--purple);color:var(--purple)}
+/* Style creator block */
+.style-creator{background:var(--bg0);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-top:6px;display:none}
+.style-creator.open{display:block}
+.style-creator-input{width:100%;background:var(--bg2);border:1px solid var(--bdr2);border-radius:7px;padding:7px 10px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:12px;outline:none;margin-bottom:7px;transition:border-color 0.2s}
+.style-creator-input:focus{border-color:var(--purple)}
+.style-creator-input::placeholder{color:var(--txt3)}
+.style-creator-ta{width:100%;background:var(--bg2);border:1px solid var(--bdr2);border-radius:7px;padding:7px 10px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:12px;line-height:1.7;resize:none;outline:none;min-height:90px;margin-bottom:7px;transition:border-color 0.2s}
+.style-creator-ta:focus{border-color:var(--purple)}
+.style-creator-ta::placeholder{color:var(--txt3)}
+.style-creator-save{width:100%;background:linear-gradient(135deg,#9b6bff,#6a3abf);border:none;border-radius:7px;padding:8px;color:white;font-family:'Noto Sans SC',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity 0.15s}
+.style-creator-save:active{opacity:0.8}
+
+/* ══ MODAL OVERLAY ══ */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:150;display:flex;align-items:flex-end;justify-content:center}
+.modal{width:100%;max-width:480px;background:var(--bg1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr2);max-height:92vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.4,0,0.2,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{padding:16px 16px 12px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px}
+.modal-close{color:var(--txt2);background:none;border:none;font-size:22px;cursor:pointer;line-height:1;padding:0}
+.modal-body{flex:1;overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--bdr) transparent}
+.modal-body::-webkit-scrollbar{width:3px}.modal-body::-webkit-scrollbar-thumb{background:var(--bdr2)}
+.modal-footer{padding:12px 14px;border-top:1px solid var(--bdr);flex-shrink:0}
+.modal-btn{padding:10px 18px;border:none;border-radius:8px;font-family:'Noto Sans SC',sans-serif;font-size:13px;cursor:pointer;transition:transform 0.15s}
+.modal-btn:active{transform:scale(0.96)}
+.modal-btn.primary{background:linear-gradient(135deg,#c8a76c,#8a6e3a);color:#06060a;font-weight:700}
+.modal-btn.secondary{background:var(--bg3);border:1px solid var(--bdr2);color:var(--txt2)}
+.modal-btn.danger-btn{background:rgba(255,74,74,0.12);border:1px solid rgba(255,74,74,0.3);color:var(--danger)}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+
+/* ══ SLIDE PANEL ══ */
+.panel-bg{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);z-index:99}
+.panel{position:fixed;top:0;right:0;width:min(88vw,360px);height:100%;background:var(--bg1);border-left:1px solid var(--bdr2);z-index:100;display:flex;flex-direction:column;animation:slideIn 0.28s cubic-bezier(0.4,0,0.2,1)}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.ph{padding:15px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.pt{color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px}
+.pclose{color:var(--txt2);background:none;border:none;font-size:20px;cursor:pointer;line-height:1;padding:0}
+.pb{flex:1;overflow-y:auto;padding:13px;scrollbar-width:thin;scrollbar-color:var(--bdr) transparent}
+.pb::-webkit-scrollbar{width:3px}.pb::-webkit-scrollbar-thumb{background:var(--bdr2)}
+
+/* Panel content helpers */
+.sec-t{color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:10.5px;letter-spacing:2px;margin-bottom:10px;margin-top:4px}
+.item-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:9px;padding:11px;margin-bottom:7px}
+.item-n{color:var(--gold);font-weight:600;font-size:13px}.item-q{color:var(--txt2);font-size:10px;font-family:'Share Tech Mono',monospace;float:right}
+.item-d{color:var(--txt2);font-size:12px;margin-top:4px;line-height:1.6;clear:both}
+.srow{margin-bottom:13px}
+.slbl{color:var(--txt2);font-size:10.5px;margin-bottom:4px;font-family:'Share Tech Mono',monospace;display:flex;justify-content:space-between}
+.slbl span{color:var(--txt)}
+.sbg{height:5px;background:var(--bg0);border-radius:3px;overflow:hidden}
+.sf{height:100%;border-radius:3px;transition:width 0.5s ease}
+.sf.hp{background:linear-gradient(90deg,#2aff6a,#3aff7a)}
+.sf.san{background:linear-gradient(90deg,#2a7aff,#4a9eff)}
+.sf.en{background:linear-gradient(90deg,#ff9a2a,#ffb84a)}
+.sf.dv{background:linear-gradient(90deg,#c8500a,#ff9a3a)}
+.sk-card{background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--devour);border-radius:0 9px 9px 0;padding:9px 11px;margin-bottom:7px}
+.sk-n{color:var(--devour);font-size:13px;font-weight:600}.sk-lv{color:var(--gold);font-size:10px;font-family:'Share Tech Mono',monospace;float:right}
+.sk-d{color:var(--txt2);font-size:12px;margin-top:4px;line-height:1.6;clear:both}
+.threat-box{margin-top:14px;padding:10px;background:rgba(255,74,74,0.07);border:1px solid rgba(255,74,74,0.3);border-radius:8px;color:var(--danger);font-size:12px}
+
+/* Settings panel */
+.setting-row{padding:12px 0;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.setting-row:last-child{border-bottom:none}
+.setting-label{color:var(--txt);font-size:13px;flex:1}
+.setting-desc{color:var(--txt2);font-size:11px;margin-top:3px;line-height:1.5}
+.setting-val{color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:11px;min-width:30px;text-align:right}
+.slider{-webkit-appearance:none;appearance:none;width:100px;height:4px;background:var(--bg3);border-radius:2px;outline:none;flex-shrink:0}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--gold);cursor:pointer}
+.select-input{background:var(--bg2);border:1px solid var(--bdr2);border-radius:7px;padding:5px 9px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:12px;outline:none;cursor:pointer}
+.prompt-textarea{width:100%;background:var(--bg2);border:1px solid var(--bdr2);border-radius:8px;padding:10px 12px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:12.5px;line-height:1.8;resize:vertical;outline:none;min-height:120px;margin-top:8px}
+.prompt-textarea:focus{border-color:var(--gold2)}
+.toggle{width:40px;height:22px;background:var(--bg3);border-radius:11px;position:relative;cursor:pointer;transition:background 0.25s;flex-shrink:0;border:1px solid var(--bdr2);-webkit-user-select:none;user-select:none}
+.toggle.on{background:var(--gold2)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;background:var(--txt2);border-radius:50%;transition:transform 0.25s,background 0.25s}
+.toggle.on::after{transform:translateX(18px);background:var(--gold)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{color:var(--txt2);font-size:12.5px}
+.key-change-row{display:flex;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr)}
+.key-change-row:last-child{border-bottom:none}
+.key-change-label{color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;min-width:90px}
+.key-change-input{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:7px;padding:7px 10px;color:var(--txt);font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;min-width:0}
+.key-change-input:focus{border-color:var(--gold)}
+.key-save-btn{background:var(--bg3);border:1px solid var(--bdr2);border-radius:7px;padding:7px 12px;color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.key-save-btn:active{border-color:var(--gold);color:var(--gold)}
+
+/* ══ IZ PERSONA MODAL ══ */
+.iz-persona-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:18px;animation:fsi 0.2s ease}
+.iz-persona-modal{width:100%;max-width:520px;background:var(--bg1);border:1px solid #4a2a5a;border-radius:18px;display:flex;flex-direction:column;max-height:92vh;box-shadow:0 0 60px rgba(232,176,216,0.15)}
+.iz-persona-header{padding:18px 18px 12px;border-bottom:1px solid #2d1a38;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.iz-persona-av{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle,#e8b0d8,#9b6bff);display:flex;align-items:center;justify-content:center;font-size:14px;color:white;font-weight:700;box-shadow:0 0 20px rgba(232,176,216,0.4);flex-shrink:0}
+.iz-persona-title{flex:1}
+.iz-persona-title .t1{color:var(--iz);font-size:14px;font-weight:600;letter-spacing:1px}
+.iz-persona-title .t2{color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;margin-top:2px}
+.iz-persona-close{color:var(--txt2);background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;line-height:1}
+.iz-persona-body{flex:1;overflow-y:auto;padding:16px 18px;scrollbar-width:thin}
+.iz-persona-desc{color:var(--txt2);font-size:12px;line-height:1.85;margin-bottom:12px;padding:10px 12px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--iz)}
+.iz-persona-charcount{text-align:right;font-size:10.5px;font-family:'Share Tech Mono',monospace;color:var(--txt3);margin-top:5px}
+.iz-persona-charcount.warn{color:var(--orange)}.iz-persona-charcount.danger{color:var(--danger)}
+.iz-persona-textarea{width:100%;background:var(--bg0);border:1px solid #3a2048;border-radius:10px;padding:13px 14px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:13px;line-height:1.9;resize:vertical;outline:none;min-height:220px;max-height:55vh;transition:border-color 0.2s}
+.iz-persona-textarea:focus{border-color:var(--iz)}
+.iz-persona-footer{padding:12px 18px;border-top:1px solid #2d1a38;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+.iz-persona-save{background:linear-gradient(135deg,#e8b0d8,#9b6bff);border:none;border-radius:9px;padding:10px 20px;color:#06060a;font-family:'Noto Sans SC',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.iz-persona-cancel{background:var(--bg3);border:1px solid var(--bdr2);border-radius:9px;padding:10px 16px;color:var(--txt2);font-size:13px;font-family:'Noto Sans SC',sans-serif;cursor:pointer}
+.iz-persona-clear{background:none;border:1px solid rgba(255,74,74,0.3);border-radius:9px;padding:10px 14px;color:var(--danger);font-size:12px;font-family:'Share Tech Mono',monospace;cursor:pointer;margin-right:auto}
+.iz-active-badge,.dv-active-badge{display:inline-block;background:rgba(255,154,58,0.18);border:1px solid rgba(255,154,58,0.4);color:var(--devour);font-size:9px;font-family:'Share Tech Mono',monospace;padding:1px 5px;border-radius:6px;margin-left:4px;vertical-align:middle}
+.iz-active-badge{background:rgba(232,176,216,0.18);border-color:rgba(232,176,216,0.4);color:var(--iz)}
+
+/* ══ DEVOUR PERSONA MODAL ══ */
+.dv-persona-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:18px;animation:fsi 0.2s ease}
+.dv-persona-modal{width:100%;max-width:560px;background:var(--bg1);border:1px solid #5a3a0a;border-radius:18px;display:flex;flex-direction:column;max-height:94vh;box-shadow:0 0 60px rgba(255,154,58,0.12)}
+.dv-persona-header{padding:18px 18px 12px;border-bottom:1px solid #3a2208;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.dv-persona-av{width:38px;height:38px;border-radius:10px;background:radial-gradient(circle at 30% 30%,#ffb84a,#c8500a);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(255,154,58,0.35);flex-shrink:0}
+.dv-persona-title{flex:1}
+.dv-persona-title .t1{color:var(--devour);font-size:14px;font-weight:600;letter-spacing:1px}
+.dv-persona-title .t2{color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;margin-top:2px}
+.dv-persona-close{color:var(--txt2);background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;line-height:1}
+.dv-persona-body{flex:1;overflow-y:auto;padding:16px 18px}
+.dv-persona-desc{color:var(--txt2);font-size:12px;line-height:1.85;margin-bottom:12px;padding:10px 12px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--devour)}
+.dv-persona-charcount{text-align:right;font-size:10.5px;font-family:'Share Tech Mono',monospace;color:var(--txt3);margin-top:5px}
+.dv-persona-charcount.warn{color:var(--orange)}.dv-persona-charcount.danger{color:var(--danger)}
+.dv-persona-textarea{width:100%;background:var(--bg0);border:1px solid #4a2808;border-radius:10px;padding:13px 14px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:13px;line-height:1.9;resize:vertical;outline:none;min-height:260px;max-height:52vh;transition:border-color 0.2s}
+.dv-persona-textarea:focus{border-color:var(--devour)}
+.dv-persona-footer{padding:12px 18px;border-top:1px solid #3a2208;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;flex-wrap:wrap}
+.dv-persona-save{background:linear-gradient(135deg,#ffb84a,#c8500a);border:none;border-radius:9px;padding:10px 20px;color:#06060a;font-family:'Noto Sans SC',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.dv-persona-cancel{background:var(--bg3);border:1px solid var(--bdr2);border-radius:9px;padding:10px 16px;color:var(--txt2);font-size:13px;font-family:'Noto Sans SC',sans-serif;cursor:pointer}
+.dv-persona-reset{background:none;border:1px solid rgba(255,154,58,0.35);border-radius:9px;padding:10px 14px;color:var(--devour);font-size:12px;font-family:'Share Tech Mono',monospace;cursor:pointer;margin-right:auto}
+
+/* ══ SEARCH BAR ══ */
+.search-bar{flex-shrink:0;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:7px 10px;display:flex;gap:7px;align-items:center;animation:fsi 0.2s ease}
+.search-input{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:14px;padding:6px 12px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:13px;outline:none}
+.search-nav-btn{background:var(--bg3);border:1px solid var(--bdr2);border-radius:8px;padding:5px 9px;color:var(--txt2);font-size:12px;cursor:pointer;font-family:'Share Tech Mono',monospace;flex-shrink:0}
+.search-count{color:var(--txt3);font-size:11px;font-family:'Share Tech Mono',monospace;white-space:nowrap;flex-shrink:0;min-width:42px;text-align:center}
+.search-close{background:none;border:none;color:var(--txt2);font-size:18px;cursor:pointer;padding:2px 5px;flex-shrink:0}
+mark.sh{background:rgba(200,167,108,0.35);color:var(--gold);border-radius:2px;padding:0 1px}
+mark.sh.active-sh{background:rgba(200,167,108,0.7);color:#06060a;border-radius:2px}
+
+/* ══ SCROLL BUTTONS ══ */
+.scroll-btns{position:absolute;right:10px;bottom:12px;display:flex;flex-direction:column;gap:5px;z-index:20;pointer-events:none}
+.scroll-btn{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--bdr2);color:var(--txt2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:all;transition:opacity 0.25s,border-color 0.2s;opacity:0}
+.scroll-btn.visible{opacity:1}
+.scroll-btn:active{border-color:var(--gold);color:var(--gold)}
+
+/* ══ MSG ACTION BAR ══ */
+.msg-action-bar{display:none;position:absolute;bottom:-28px;left:4px;background:var(--bg3);border:1px solid var(--bdr2);border-radius:20px;padding:3px 6px;gap:2px;z-index:100;flex-direction:row;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.4);animation:fsi 0.15s ease}
+.msg.active-msg .msg-action-bar{display:flex}
+.msg.active-msg{z-index:50;position:relative}
+.msg-action-bar button{background:none;border:none;font-size:14px;padding:3px 5px;cursor:pointer;border-radius:10px;line-height:1}
+.msg-action-bar button:active{background:var(--bg4)}
+
+/* QUOTE BLOCK */
+.quote-preview{background:var(--bg2);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:7px 10px;margin-bottom:7px;display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.quote-preview .qp-icon{color:var(--gold);font-size:11px;font-family:'Share Tech Mono',monospace;flex-shrink:0;margin-top:1px}
+.quote-preview .qp-text{color:var(--txt2);font-size:12px;line-height:1.65;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.quote-preview .qp-go{color:var(--txt3);font-size:10px;flex-shrink:0;margin-top:2px}
+@keyframes flash-hl{0%{background:rgba(200,167,108,0.22)}100%{background:transparent}}
+.msg.flash-hl{animation:flash-hl 1.2s ease}
+
+/* NPC Card */
+.npc-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:9px;padding:10px 11px;margin-bottom:7px}
+.npc-name{color:var(--gold);font-size:13px;font-weight:600}
+.npc-rel{font-size:10px;font-family:'Share Tech Mono',monospace;float:right;padding:2px 7px;border-radius:8px;margin-top:1px}
+.npc-rel.friendly{color:var(--green);background:rgba(58,255,122,0.08);border:1px solid rgba(58,255,122,0.2)}
+.npc-rel.hostile{color:var(--danger);background:rgba(255,74,74,0.08);border:1px solid rgba(255,74,74,0.2)}
+.npc-rel.neutral{color:var(--txt2);background:var(--bg3);border:1px solid var(--bdr)}
+.npc-rel.complex{color:var(--purple);background:rgba(155,107,255,0.08);border:1px solid rgba(155,107,255,0.2)}
+.npc-desc{color:var(--txt2);font-size:11.5px;margin-top:5px;line-height:1.6;clear:both}
+.npc-last{color:var(--txt3);font-size:10px;font-family:'Share Tech Mono',monospace;margin-top:4px}
+
+/* Level log card */
+.lvlog-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:9px;padding:10px 11px;margin-bottom:7px;display:flex;align-items:flex-start;gap:10px}
+.lvlog-code{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--cold);background:rgba(74,158,255,0.08);border:1px solid rgba(74,158,255,0.2);border-radius:5px;padding:2px 6px;flex-shrink:0;margin-top:1px}
+.lvlog-info{flex:1}
+.lvlog-name{color:var(--txt);font-size:13px;font-weight:500}
+.lvlog-desc{color:var(--txt2);font-size:11.5px;margin-top:3px;line-height:1.55}
+.lvlog-danger{font-size:10px;font-family:'Share Tech Mono',monospace;margin-top:4px}
+.lvlog-danger.low{color:var(--green)}.lvlog-danger.med{color:var(--orange)}.lvlog-danger.high{color:var(--danger)}.lvlog-danger.extreme{color:#ff0000}
+
+/* Quick action items */
+.qa-item{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;margin-bottom:6px;cursor:pointer;transition:border-color 0.18s}
+.qa-item:active{border-color:var(--gold)}
+.qa-text{flex:1;color:var(--txt);font-size:12.5px;line-height:1.5}
+.qa-freq{font-size:10px;font-family:'Share Tech Mono',monospace;color:var(--txt3)}
+.qa-pin{font-size:12px;color:var(--gold);flex-shrink:0}
+.qa-del{background:none;border:none;color:var(--txt3);font-size:15px;cursor:pointer;padding:0 2px;flex-shrink:0}
+.qa-del:active{color:var(--danger)}
+.qa-add-row{display:flex;gap:7px;margin-bottom:12px}
+.qa-add-input{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:8px;padding:8px 10px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:12px;outline:none;min-width:0}
+.qa-add-input:focus{border-color:var(--gold2)}
+.qa-add-btn{background:var(--bg3);border:1px solid var(--bdr2);border-radius:8px;padding:8px 12px;color:var(--txt2);font-size:12px;font-family:'Share Tech Mono',monospace;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.qa-add-btn:active{border-color:var(--gold);color:var(--gold)}
+
+/* Balance display */
+.balance-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center}
+.balance-amount{font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--gold);margin:6px 0}
+.balance-sub{color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace}
+.balance-refresh{display:block;width:100%;background:var(--bg3);border:1px solid var(--bdr2);border-radius:8px;padding:9px;color:var(--txt2);font-size:12px;font-family:'Share Tech Mono',monospace;cursor:pointer;margin-top:8px;transition:all 0.15s}
+.balance-refresh:active{border-color:var(--gold);color:var(--gold)}
+.balance-note{color:var(--txt3);font-size:10.5px;font-family:'Share Tech Mono',monospace;margin-top:8px;line-height:1.7}
+
+/* Onboarding tip */
+.onboard-tip{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--bg1);border:1px solid var(--gold2);border-radius:12px;padding:10px 16px;z-index:60;max-width:300px;text-align:center;animation:fsi 0.3s ease;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.onboard-tip-text{color:var(--txt2);font-size:12px;line-height:1.7}
+.onboard-tip-text b{color:var(--gold)}
+.onboard-tip-close{display:block;margin-top:8px;background:none;border:1px solid var(--bdr2);border-radius:7px;padding:5px 14px;color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;cursor:pointer;width:100%}
+
+/* Progress log timeline */
+.plog-item{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr)}
+.plog-item:last-child{border-bottom:none}
+.plog-turn{color:var(--cold);font-family:'Share Tech Mono',monospace;font-size:10px;flex-shrink:0;min-width:36px;padding-top:2px}
+.plog-text{color:var(--txt2);font-size:12.5px;line-height:1.6;flex:1}
+/* BackNet archive */
+.bna-item{background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--cold);border-radius:0 9px 9px 0;padding:10px 12px;margin-bottom:8px}
+.bna-turn{color:var(--txt3);font-size:10px;font-family:'Share Tech Mono',monospace;margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══ -->
+<div id="setup-screen">
+  <div class="setup-logo">后　室</div>
+  <div class="setup-sub">· 暴食者 · 后室文字冒险 ·</div>
+
+  <div class="setup-card">
+    <div class="setup-section-title">▣ 主角设定</div>
+    <div class="key-row">
+      <span class="key-label">角色名</span>
+      <input class="key-input" type="text" id="char-name-input" placeholder="输入你的主角名称" autocomplete="off" maxlength="20">
+    </div>
+  </div>
+
+  <div class="setup-card">
+    <div class="setup-section-title">▣ 叙事引擎 API KEY（必填）</div>
+    <div class="setup-desc">
+      游戏核心叙事 AI，默认使用 DeepSeek。<br>
+      获取 Key：访问 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> → API Keys → 创建，复制以 <code style="color:var(--cold);font-family:'Share Tech Mono',monospace;font-size:11px;background:var(--bg0);padding:1px 5px;border-radius:3px">sk-</code> 开头的密钥。
+    </div>
+    <div class="key-row">
+      <span class="key-label">API Key</span>
+      <input class="key-input" type="password" id="ds-key-input" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+    </div>
+    <div style="color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;margin:12px 0 8px;letter-spacing:1px">▸ 模型选择</div>
+    <div class="model-preset-row" id="setup-model-chips"></div>
+    <div class="custom-endpoint-block" id="setup-custom-block">
+      <div style="color:var(--danger);font-size:11px;font-family:'Share Tech Mono',monospace;padding:8px 10px;background:rgba(255,74,74,0.07);border:1px solid rgba(255,74,74,0.25);border-radius:7px;margin-bottom:10px;line-height:1.8">
+        ⚠ Claude/OpenAI/Gemini 在中国大陆需境外网络<br>
+        <span style="color:var(--green)">✓ 国内可用：DeepSeek · 通义千问 · 硅基流动</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-label">API 端点</span>
+        <input class="ep-input" id="setup-ep-url" placeholder="https://api.deepseek.com/chat/completions" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="ep-row">
+        <span class="ep-label">模型名称</span>
+        <input class="ep-input" id="setup-ep-model" placeholder="deepseek-chat" spellcheck="false" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" onclick="startGame()">进 入 后 室</button>
+  <div class="setup-warn" id="setup-warn">请填写角色名称并输入有效的 API Key（以 sk- 开头）</div>
+  <div style="color:var(--txt3);font-size:11px;font-family:'Share Tech Mono',monospace;margin-top:12px;text-align:center;max-width:400px;line-height:1.8">
+    💡 联网搜索 · 图片生成密钥可在进入游戏后<br>通过右下角「更多」菜单补充配置
+  </div>
+</div>
+
+<!-- ══ LOADING SCREEN ══ -->
+<div id="loading-screen">
+  <div class="ld-title">后　室</div>
+  <div class="ld-sub">· 暴食者 · 后室文字冒险 ·</div>
+  <div class="ld-spin"></div>
+  <div class="ld-msg" id="ld-msg">正在初始化伊兹神经接入系统…</div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div id="game-screen">
+  <!-- STATUS BAR -->
+  <div class="sbar">
+    <div class="chip"><span class="lbl">层级</span><span class="v" id="s-lv">—</span></div>
+    <div class="chip hp"><span class="lbl">HP</span><span class="v" id="s-hp">—</span></div>
+    <div class="chip san"><span class="lbl">精神</span><span class="v" id="s-san">—</span></div>
+    <div class="chip"><span class="lbl">能量</span><span class="v" id="s-en">—</span></div>
+    <div class="chip dvr"><span class="lbl">暴食</span><span class="v" id="s-dv">—</span></div>
+    <div class="chip thr" id="chip-thr" style="display:none"><span class="lbl">⚠</span><span class="v" id="s-thr">—</span></div>
+    <div class="sbar-spacer"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="game-main">
+    <div class="search-bar" id="search-bar" style="display:none">
+      <input class="search-input" id="search-input" type="text" placeholder="搜索历史记录…" maxlength="80">
+      <span class="search-count" id="search-count">0/0</span>
+      <button class="search-nav-btn" onclick="searchNav(-1)">↑</button>
+      <button class="search-nav-btn" onclick="searchNav(1)">↓</button>
+      <button class="search-close" onclick="closeSearch()">✕</button>
+    </div>
+    <div style="flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:0">
+      <div class="feed" id="feed"></div>
+      <div class="scroll-btns" id="scroll-btns">
+        <button class="scroll-btn" id="scroll-top-btn" onclick="scrollFeed('top')">↑</button>
+        <button class="scroll-btn" id="scroll-bot-btn" onclick="scrollFeed('bot')">↓</button>
+      </div>
+    </div>
+
+    <!-- OPTIONS DRAWER -->
+    <div class="opts-drawer collapsed" id="opts-drawer">
+      <div class="opts-drawer-header" onclick="toggleOptsDrawer()">
+        <div class="opts-drawer-title">
+          <span>▣ 行动选项</span>
+          <span class="opts-drawer-badge" id="opts-badge">0 项</span>
+        </div>
+        <span class="opts-drawer-toggle">▲</span>
+      </div>
+      <div class="opts-drawer-body" id="opts-drawer-body"></div>
+      <div class="opts-drawer-footer" id="opts-drawer-footer" style="display:none">
+        <button class="opts-clear-btn" onclick="clearOptSelection()">清除选择</button>
+        <button class="opts-send-btn" id="opts-send-btn" onclick="sendSelectedOpts()">发送所选行动</button>
+      </div>
+    </div>
+
+    <!-- INPUT BAR -->
+    <div id="bbar-wrap">
+      <!-- Net icon: left of cinput, above bbar row -->
+      <button id="net-icon" onclick="toggleNet()" title="切换联网搜索" aria-label="联网搜索开关"></button>
+      <div id="input-quote-container"></div>
+      <div class="bbar">
+        <button class="plus-btn" id="plus-btn" onclick="togglePlusMenu()">
+          <!-- Plus SVG: gold + black -->
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="2" width="2" height="14" rx="1" fill="#c8a76c"/>
+            <rect x="2" y="8" width="14" height="2" rx="1" fill="#c8a76c"/>
+          </svg>
+        </button>
+        <input class="cinput" id="cinput" type="text" placeholder="输入行动或对话…" maxlength="200">
+        <button class="stop-btn" id="stop-btn" onclick="stopGeneration()">⬛ 停止</button>
+        <button class="iz-quick-btn" onclick="askIz()" title="问伊兹">
+          <!-- IZ SVG: purple heart -->
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 17s-7-4.5-7-9a4 4 0 0 1 7-2.65A4 4 0 0 1 17 8c0 4.5-7 9-7 9z" fill="#9b6bff" stroke="#e8b0d8" stroke-width="1"/>
+          </svg>
+        </button>
+        <button class="sbtn" id="sbtn" onclick="handleSend()">
+          <!-- Send SVG: gold arrow on black -->
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px">
+            <path d="M2 8 L13 3 L10 8 L13 13 Z" fill="#06060a" stroke="#06060a" stroke-width="0.5"/>
+            <path d="M2 8 L13 3 L10 8 L13 13 Z" fill="#06060a"/>
+            <line x1="10" y1="8" x2="2" y2="8" stroke="#06060a" stroke-width="1.5"/>
+          </svg>发送
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="nav">
+    <!-- Backpack -->
+    <button class="nbtn" onclick="openSlidePanel('backpack')">
+      <span class="ni">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="7" y="9" width="10" height="11" rx="2" stroke="#c8a76c" stroke-width="1.5" class="icon-stroke" fill="#06060a"/>
+          <path d="M9 9V7a3 3 0 0 1 6 0v2" stroke="#c8a76c" stroke-width="1.5" stroke-linecap="round" class="icon-stroke"/>
+          <line x1="7" y1="13" x2="17" y2="13" stroke="#8a6e3a" stroke-width="1" class="icon-stroke"/>
+          <rect x="10" y="12" width="4" height="2.5" rx="1" fill="#c8a76c" class="icon-fill"/>
+        </svg>
+      </span>背包
+    </button>
+    <!-- Status -->
+    <button class="nbtn" onclick="openSlidePanel('status')">
+      <span class="ni">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="#c8a76c" stroke-width="1.5" class="icon-stroke" fill="#06060a"/>
+          <path d="M7 14 L10 10 L13 13 L16 9" stroke="#3aff7a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-stroke"/>
+          <circle cx="12" cy="12" r="1.5" fill="#c8a76c" class="icon-fill"/>
+        </svg>
+      </span>状态
+    </button>
+    <!-- Map -->
+    <button class="nbtn" onclick="openSlidePanel('map')">
+      <span class="ni">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="3,6 9,4 15,6 21,4 21,18 15,20 9,18 3,20" stroke="#c8a76c" stroke-width="1.5" fill="#06060a" stroke-linejoin="round" class="icon-stroke"/>
+          <line x1="9" y1="4" x2="9" y2="18" stroke="#8a6e3a" stroke-width="1" class="icon-stroke"/>
+          <line x1="15" y1="6" x2="15" y2="20" stroke="#8a6e3a" stroke-width="1" class="icon-stroke"/>
+          <circle cx="12" cy="11" r="1.5" fill="#4a9eff"/>
+        </svg>
+      </span>层级
+    </button>
+    <!-- More -->
+    <button class="nbtn" id="more-nav-btn" onclick="toggleMoreMenu()">
+      <span class="ni">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="8" height="8" rx="2" stroke="#c8a76c" stroke-width="1.5" fill="#06060a" class="icon-stroke"/>
+          <rect x="13" y="3" width="8" height="8" rx="2" stroke="#c8a76c" stroke-width="1.5" fill="#06060a" class="icon-stroke"/>
+          <rect x="3" y="13" width="8" height="8" rx="2" stroke="#c8a76c" stroke-width="1.5" fill="#06060a" class="icon-stroke"/>
+          <rect x="13" y="13" width="8" height="8" rx="2" stroke="#8a6e3a" stroke-width="1" fill="#06060a" class="icon-stroke"/>
+          <line x1="17" y1="15" x2="17" y2="19" stroke="#c8a76c" stroke-width="1.5" stroke-linecap="round" class="icon-stroke"/>
+          <line x1="15" y1="17" x2="19" y2="17" stroke="#c8a76c" stroke-width="1.5" stroke-linecap="round" class="icon-stroke"/>
+        </svg>
+      </span>更多
+    </button>
+  </div>
+</div>
+
+<!-- CONTAINERS -->
+<div id="plus-menu-container"></div>
+<div id="modal-container"></div>
+<div id="panel-container"></div>
+<div id="more-menu-container"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  SVG ICON LIBRARY  (黑金 + 意义色 三色原则)
+// ════════════════════════════════════════════════════════
+const ICONS = {
+  // 👥 NPC — gold frame, purple accent (social/mysterious)
+  npc: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="10" cy="10" r="4" stroke="#c8a76c" stroke-width="1.5" fill="#06060a"/>
+    <circle cx="19" cy="10" r="3" stroke="#8a6e3a" stroke-width="1.2" fill="#06060a"/>
+    <path d="M3 22c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="#c8a76c" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M19 15c2.76 0 5 2.24 5 5" stroke="#9b6bff" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+    <circle cx="19" cy="10" r="1" fill="#9b6bff"/>
+  </svg>`,
+  // ⚡ Quick actions — gold frame, electric-blue bolt
+  quick: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="3" width="22" height="22" rx="5" stroke="#c8a76c" stroke-width="1.5" fill="#06060a"/>
+    <polygon points="15,5 8,15 13,15 11,23 20,13 15,13" fill="#4a9eff" stroke="#c8a76c" stroke-width="0.8" stroke-linejoin="round"/>
+  </svg>`,
+  // ⚙️ Settings — gold gear, amber highlight
+  settings: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="14" cy="14" r="4" stroke="#c8a76c" stroke-width="1.5" fill="#06060a"/>
+    <circle cx="14" cy="14" r="1.5" fill="#c8a76c"/>
+    <path d="M14 3v3M14 22v3M3 14h3M22 14h3M6.22 6.22l2.12 2.12M19.66 19.66l2.12 2.12M6.22 21.78l2.12-2.12M19.66 8.34l2.12-2.12" stroke="#c8a76c" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="14" cy="14" r="7" stroke="#8a6e3a" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+  </svg>`,
+  // 🔑 Keys — gold key, amber glow
+  keys: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="10" cy="11" r="5.5" stroke="#c8a76c" stroke-width="1.5" fill="#06060a"/>
+    <circle cx="10" cy="11" r="2.5" fill="#8a6e3a"/>
+    <line x1="15" y1="14" x2="25" y2="24" stroke="#c8a76c" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="20" y1="19" x2="20" y2="22" stroke="#c8a76c" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="22.5" y1="21.5" x2="22.5" y2="24" stroke="#c8a76c" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="10" cy="11" r="1" fill="#ffb84a"/>
+  </svg>`,
+  // 📖 Progress log — gold book, cold-blue page lines
+  log: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="4" width="16" height="20" rx="2" stroke="#c8a76c" stroke-width="1.5" fill="#06060a"/>
+    <line x1="5" y1="4" x2="5" y2="24" stroke="#c8a76c" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="9" y1="9" x2="19" y2="9" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="9" y1="13" x2="19" y2="13" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="9" y1="17" x2="15" y2="17" stroke="#4a9eff" stroke-width="1.2" stroke-linecap="round"/>
+    <circle cx="20" cy="20" r="4" fill="#06060a" stroke="#c8a76c" stroke-width="1.2"/>
+    <line x1="20" y1="18" x2="20" y2="21" stroke="#ffb84a" stroke-width="1.2" stroke-linecap="round"/>
+    <circle cx="20" cy="22" r="0.8" fill="#ffb84a"/>
+  </svg>`,
+  // 🌐 BackNet archive — gold globe, cold-blue signal
+  backnet: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="14" cy="14" r="10" stroke="#c8a76c" stroke-width="1.5" fill="#06060a"/>
+    <ellipse cx="14" cy="14" rx="4.5" ry="10" stroke="#8a6e3a" stroke-width="1" fill="none"/>
+    <line x1="4" y1="14" x2="24" y2="14" stroke="#8a6e3a" stroke-width="1"/>
+    <line x1="6" y1="9" x2="22" y2="9" stroke="#8a6e3a" stroke-width="0.8"/>
+    <line x1="6" y1="19" x2="22" y2="19" stroke="#8a6e3a" stroke-width="0.8"/>
+    <circle cx="14" cy="14" r="2.5" fill="#4a9eff" opacity="0.8"/>
+  </svg>`,
+  // 💜 IZ persona — purple heart, iz-pink glow frame
+  iz: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="14" cy="14" r="11" stroke="#c8a76c" stroke-width="1.2" fill="#06060a"/>
+    <path d="M14 21s-8-5-8-10a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 5-8 10-8 10z" fill="#9b6bff" stroke="#e8b0d8" stroke-width="1"/>
+    <circle cx="14" cy="11" r="1.2" fill="#e8b0d8" opacity="0.7"/>
+  </svg>`,
+  // 吞噬异能 — custom glyph: maw/rune, devour-orange + gold
+  devour: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="14" cy="14" r="11" stroke="#c8a76c" stroke-width="1.2" fill="#06060a"/>
+    <!-- outer rune ring marks -->
+    <circle cx="14" cy="14" r="8" stroke="#8a6e3a" stroke-width="0.8" stroke-dasharray="1.5 3" fill="none"/>
+    <!-- maw: open mouth shape pointing inward -->
+    <path d="M14 6 C8 8 5 14 8 19 C10 22 14 23 14 23 C14 23 18 22 20 19 C23 14 20 8 14 6Z" fill="#06060a" stroke="#ff9a3a" stroke-width="1.3"/>
+    <!-- inner teeth / absorption lines -->
+    <path d="M10 14 Q12 11 14 14 Q16 11 18 14" stroke="#ff9a3a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M11 17 Q14 15 17 17" stroke="#c8500a" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <!-- center void -->
+    <circle cx="14" cy="14" r="2" fill="#ff9a3a" opacity="0.6"/>
+    <circle cx="14" cy="14" r="0.8" fill="#ffb84a"/>
+  </svg>`,
+  // 📄 Export — gold doc with download arrow, green accent
+  export: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="3" width="13" height="18" rx="2" stroke="#c8a76c" stroke-width="1.5" fill="#06060a"/>
+    <path d="M16 3 L22 9 L16 9 Z" stroke="#c8a76c" stroke-width="1.5" fill="#06060a"/>
+    <line x1="16" y1="3" x2="16" y2="9" stroke="#c8a76c" stroke-width="1.5"/>
+    <line x1="16" y1="9" x2="22" y2="9" stroke="#c8a76c" stroke-width="1.5"/>
+    <line x1="9" y1="14" x2="19" y2="14" stroke="#8a6e3a" stroke-width="1" stroke-linecap="round"/>
+    <line x1="14" y1="19" x2="14" y2="26" stroke="#3aff7a" stroke-width="1.5" stroke-linecap="round"/>
+    <polyline points="11,23 14,26 17,23" stroke="#3aff7a" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+  </svg>`,
+  // Search magnifier — amber lens, black handle, gold frame
+  search: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="8.5" cy="8.5" r="5.5" stroke="#c8a76c" stroke-width="2" fill="#06060a"/>
+    <circle cx="8.5" cy="8.5" r="3" fill="none" stroke="#8a6e3a" stroke-width="1"/>
+    <line x1="12.5" y1="12.5" x2="17" y2="17" stroke="#c8a76c" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="7" cy="7" r="1" fill="#ffb84a" opacity="0.5"/>
+  </svg>`,
+};
+
+// Net icon SVG helper (signal rings, colored by state)
+function netIconSVG(on) {
+  const c = on ? '#4a9eff' : '#3a3834';
+  const c2 = on ? 'rgba(74,158,255,0.5)' : 'rgba(58,56,52,0.4)';
+  const c3 = on ? 'rgba(74,158,255,0.25)' : 'rgba(58,56,52,0.2)';
+  return `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="7" cy="10" r="1.5" fill="${c}"/>
+    <path d="M4 8 a4.24 4.24 0 0 1 6 0" stroke="${c2}" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+    <path d="M1.5 5.5 a7.78 7.78 0 0 1 11 0" stroke="${c3}" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+  </svg>`;
+}
+
+// ════════════════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════════════════
+const TVLY_API    = "https://api.tavily.com/search";
+const POLL_API    = "https://image.pollinations.ai/prompt/";
+const SF_API      = "https://api.siliconflow.cn/v1/images/generations";
+const SF_IMG_MODEL= "black-forest-labs/FLUX.1-schnell";
+const DS_BALANCE_API = "https://api.deepseek.com/user/balance";
+const STORAGE_KEY = "backrooms_save_v4";
+const IMG_STYLE   = "dark surreal horror illustration, backrooms liminal space, unsettling atmosphere, dim fluorescent lighting, analog photography grain, highly detailed, cinematic, no text, ";
+
+const MODEL_PRESETS = [
+  { id:"ds-v3",    label:"DeepSeek V3",   endpoint:"https://api.deepseek.com/chat/completions", model:"deepseek-chat"     },
+  { id:"ds-r1",    label:"DeepSeek R1",   endpoint:"https://api.deepseek.com/chat/completions", model:"deepseek-reasoner" },
+  { id:"qwen-plus",label:"通义千问 Plus", endpoint:"https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", model:"qwen-plus" },
+  { id:"custom",   label:"自定义 ⚙",      endpoint:"", model:""                                                           },
+];
+
+// ════════════════════════════════════════════════════════
+//  BUILT-IN NARRATIVE STYLE PRESETS
+// ════════════════════════════════════════════════════════
+const BUILTIN_STYLE_PRESETS = {
+  surreal: {
+    label: "超现实梦境",
+    prompt: `叙事风格核心：超现实主义梦境叙事。现实的表象随时会悄然崩塌，逻辑在此是一种奢侈品。走廊在玩家未注意时悄悄延长了两倍，墙壁的黄色在某个角度看起来会微微蠕动，荧光灯发出的嗡嗡仿佛藏着语言的碎片。叙事语言应充满感官错位与意象叠加——气味是有颜色的，声音是有质地的，时间是可以触摸的。对话可以出现逻辑跳跃，NPC的行为可以无法用常识解释但却完全符合某种梦的内在逻辑。每一个场景都像是在两个现实之间的夹缝里：既真实得让人无法否认，又荒诞得让人无法置信。避免直白的恐怖描写，取而代之的是那种让人说不清哪里不对劲的持续不安感——仿佛你刚刚忘记了什么非常重要的事，但无论如何也想不起来。叙事节奏应当有时滞缓如梦中漫步，有时突然加速跳跃，就像梦境切换时的那种不连贯感。`
+  },
+  horror: {
+    label: "克苏鲁恐怖",
+    prompt: `叙事风格核心：克苏鲁式宇宙恐怖。人类的理智在宇宙的真实面目面前不堪一击，而后室正是那个真实面目的一角。叙事应当持续传递一种信息：主角所能理解的一切，在更宏大的存在面前都是微不足道的幻象。恐怖不来自血腥，而来自那种无从命名的东西——那个在走廊尽头一闪而过的轮廓，那声从墙壁内部传来的、几乎像呼吸一样的声音，那种感觉某人正在注视你但你永远找不到它的存在。语言描写应当刻意保持压抑与克制，越是无法言说的东西越不要去言说——只描述目击者的反应，让读者自己在脑海中填补那个空白。精神值的消耗在这种风格下应当更为真实和残酷，理智的侵蚀是渐进的、不可逆的。`
+  },
+  action: {
+    label: "热血动作",
+    prompt: `叙事风格核心：高强度动作冒险叙事。每一刻都充满了张力与可能性，主角不是命运的玩物，而是主动出击的行动者。战斗描写应当精确、有力、充满节奏感——每一个动作都有重量，每一次判断都在生死之间。场景描写侧重于空间感和战术价值：那道墙可以作为掩体，那扇门可以作为退路，那堆杂物可以变成武器。NPC要么是值得信赖的战友，要么是需要被智取的对手，关系清晰而充满戏剧张力。叙事节奏要快，段落要短，动词要有力。主角的每一个决定都应当立刻产生可见的后果，没有时间犹豫，没有时间后悔。`
+  },
+  mystery: {
+    label: "悬疑推理",
+    prompt: `叙事风格核心：悬疑推理叙事。后室不仅仅是求生的战场，更是一个需要被解读的谜题。每一个细节都可能是线索，每一个NPC都可能藏着秘密，每一层级的规则背后都有一套需要被发现的逻辑。叙事应当精心布置信息——有些是真正的线索，有些是精心设计的误导，有些看起来无关紧要但实际上是关键拼图。主角在这里是一个积极的推理者，而伊兹的信息时而清晰时而含糊，本身也可能是谜题的一部分。NPC的动机应当多层次、难以轻易判断，他们的表面行为背后往往有着复杂的真实意图。`
+  },
+};
+
+// ════════════════════════════════════════════════════════
+//  RUNTIME STATE
+// ════════════════════════════════════════════════════════
+let API_KEY   = "";
+let TVLY_KEY  = "";
+let SF_KEY    = "";
+let NET_ON    = false;
+let IMG_ON    = false;
+let processing = false;
+let _abortCtrl = null;
+let _gameStartedByButton = false;
+let DS_API      = MODEL_PRESETS[0].endpoint;
+let DS_MODEL    = MODEL_PRESETS[0].model;
+let DS_PRESET   = MODEL_PRESETS[0].id;
+
+// User-defined custom styles — array of { id, label, prompt }
+let USER_STYLES = [];
+
+// ════════════════════════════════════════════════════════
+//  SETTINGS
+// ════════════════════════════════════════════════════════
+let IZ_PERSONA = "";
+
+const DEFAULT_DEVOUR_PERSONA = `═══ 暴食系统 ═══
+后室史上从未出现过的「暴食系统」异能，主角独有：
+Lv1(当前)：吞噬死亡/极虚弱微型实体，获基础能量碎片
+Lv2(100exp)：吞噬中型实体，获形态模拟碎片，可短暂复现被吞噬实体特性
+Lv3(300exp)：吞噬空间元素（材质/声音/气味），开始影响局部环境
+Lv4+(600exp)：被后室底层规则感知，引发大范围异常，可吞噬概念碎片
+随等级提升：后室实体产生"预感"，BackNet出现暴食者目击帖`;
+
+let DEVOUR_PERSONA = DEFAULT_DEVOUR_PERSONA;
+
+let SETTINGS = {
+  narrativeStyle: "surreal",
+  customStyleId: "",         // id of active user style if narrativeStyle === "user"
+  dangerLevel: 60,
+  npcComplexity: 80,
+  izPersonality: "warm",
+  narrativeLength: "long",
+  customPromptAppend: "",
+};
+
+const IZ_PROMPTS = {
+  warm:       "伊兹性格温柔体贴，说话像老朋友，偶尔带着心疼，",
+  cool:       "伊兹性格冷静理性，像专业分析师，偶尔露出一丝温度，",
+  playful:    "伊兹性格俏皮活泼，喜欢开小玩笑，但关键时刻非常认真，",
+  mysterious: "伊兹性格神秘莫测，措辞意味深长，好像总是知道更多，",
+};
+const LENGTH_TOKENS = { short: 2000, medium: 3000, long: 4000 };
+
+// Get current active style prompt (builtin or user)
+function getActiveStylePrompt() {
+  const s = SETTINGS;
+  if (s.narrativeStyle === "user" && s.customStyleId) {
+    const found = USER_STYLES.find(u => u.id === s.customStyleId);
+    if (found) return found.prompt;
+  }
+  const builtin = BUILTIN_STYLE_PRESETS[s.narrativeStyle];
+  if (builtin) return builtin.prompt;
+  return BUILTIN_STYLE_PRESETS.surreal.prompt;
+}
+
+// ════════════════════════════════════════════════════════
+//  TOPIC / SAVE SLOT SYSTEM
+// ════════════════════════════════════════════════════════
+function newTopicState(charName) {
+  const name = charName || "主角";
+  return {
+    id: Date.now().toString(),
+    name: "新的旅程",
+    charName: name,
+    createdAt: new Date().toLocaleString("zh-CN"),
+    lastPlayedAt: new Date().toLocaleString("zh-CN"),
+    player: {
+      name: name,
+      hp:100,hpMax:100, sanity:85,sanityMax:100, energy:90,energyMax:100,
+      devourLevel:1, devourExp:0, devourExpMax:100,
+      devourSkills:[{name:"初级暴食",desc:"可吞噬死亡或极度虚弱的微型实体，获取其本质碎片与基础能量",level:1}],
+      devourAbsorbed:[], currentLevel:"零层", levelCode:"Level 0",
+      location:"无尽黄色走廊", threat:null, statusEffects:[],
+    },
+    inventory:[
+      {name:"潮湿饼干",qty:3,desc:"后室常见的劣质食物，回复少量HP与能量"},
+      {name:"警卫牌手电筒",qty:1,desc:"电量约70%，照明范围有限"},
+      {name:"破损手机",qty:1,desc:"无信号，相机功能勉强可用"},
+      {name:"发霉笔记本",qty:1,desc:"上一任遇难者留下的，有潦草的求生笔记"},
+    ],
+    npcRoster: [],
+    levelLog: [],
+    quickActions: [],
+    inputFrequency: {},
+    devourPublicKnowledge: 0,
+    turn: 0,
+    worldSummary: "",
+    progressLog: [],
+    backnетArchive: [],
+    convoHistory: [],
+    renderedMessages: [],
+  };
+}
+
+let TOPICS = [];
+let ACTIVE_TOPIC_ID = "";
+
+function getTopic(id) { return TOPICS.find(t => t.id === (id || ACTIVE_TOPIC_ID)); }
+function getActive()  { return getTopic(ACTIVE_TOPIC_ID); }
+
+function switchTopic(id) {
+  const cur = getActive();
+  if (cur) cur.lastPlayedAt = new Date().toLocaleString("zh-CN");
+  ACTIVE_TOPIC_ID = id;
+  saveAll();
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+  const t = getActive();
+  (t.renderedMessages || []).forEach(m => {
+    const el = renderMsgObj(m);
+    if (el) feed.appendChild(el);
+  });
+  updateStatusBar();
+  renderOptions([]);
+  document.getElementById("cinput").value = "";
+  feed.scrollTop = feed.scrollHeight;
+  if (!t.convoHistory.length) triggerOpeningScene(t);
+}
+
+function triggerOpeningScene(t) {
+  const n = t.player.name;
+  processAction(`游戏开始。主角${n}刚刚进入后室。请进行精彩震撼的开场叙事：描述后室零层的感官细节（那种潮湿的壁纸气味、嗡嗡的荧光灯声、无尽延伸的黄色走廊），让伊兹第一次接入${n}神经系统并作自我介绍（要有个性，温柔俏皮带着一丝紧张），同时展示BackNet上今日后室的日常讨论（不要提到${n}，他刚到没人知道），然后给出至少7个丰富的初始选项。`);
+}
+
+// ════════════════════════════════════════════════════════
+//  SAVE / LOAD
+// ════════════════════════════════════════════════════════
+function saveAll() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      topics: TOPICS,
+      activeTopicId: ACTIVE_TOPIC_ID,
+      settings: SETTINGS,
+      userStyles: USER_STYLES,
+      izCustomPersona: IZ_PERSONA,
+      devourPersona: DEVOUR_PERSONA,
+      savedDsKey:    btoa(API_KEY),
+      savedSfKey:    btoa(SF_KEY),
+      savedTvlyKey:  btoa(TVLY_KEY),
+      savedNetOn:    NET_ON,
+      savedImgOn:    IMG_ON,
+      savedDsApi:    DS_API,
+      savedDsModel:  DS_MODEL,
+      savedDsPreset: DS_PRESET,
+    }));
+  } catch(e) { console.warn("Save failed:", e); }
+}
+
+function loadAll() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.topics && data.topics.length) {
+      TOPICS = data.topics.map(t => {
+        t.npcRoster      = t.npcRoster     || [];
+        t.levelLog       = t.levelLog      || [];
+        t.quickActions   = t.quickActions  || [];
+        t.inputFrequency = t.inputFrequency|| {};
+        t.progressLog    = t.progressLog   || [];
+        t.backnетArchive = t.backnетArchive || [];
+        return t;
+      });
+    }
+    if (data.activeTopicId)    ACTIVE_TOPIC_ID = data.activeTopicId;
+    if (data.settings)         Object.assign(SETTINGS, data.settings);
+    if (data.userStyles)       USER_STYLES = data.userStyles;
+    if (data.izCustomPersona !== undefined) IZ_PERSONA = data.izCustomPersona;
+    if (data.devourPersona   !== undefined && data.devourPersona !== null) DEVOUR_PERSONA = data.devourPersona;
+    if (data.savedDsKey)       API_KEY   = atob(data.savedDsKey);
+    if (data.savedTvlyKey)     TVLY_KEY  = atob(data.savedTvlyKey);
+    if (data.savedSfKey)       SF_KEY    = atob(data.savedSfKey);
+    if (data.savedNetOn !== undefined) NET_ON = data.savedNetOn;
+    if (data.savedImgOn !== undefined) IMG_ON = data.savedImgOn;
+    if (data.savedDsApi)       DS_API    = data.savedDsApi;
+    if (data.savedDsModel)     DS_MODEL  = data.savedDsModel;
+    if (data.savedDsPreset)    DS_PRESET = data.savedDsPreset;
+    return true;
+  } catch(e) { return false; }
+}
+
+// ════════════════════════════════════════════════════════
+//  WORLD SUMMARY
+// ════════════════════════════════════════════════════════
+async function updateWorldSummary() {
+  const t = getActive();
+  if (t.turn % 5 !== 0 || t.turn === 0) return;
+  const recent = t.convoHistory.slice(-10).map(m =>
+    m.role + ": " + (typeof m.content === "string" ? m.content.substring(0,300) : "")
+  ).join("\n");
+  const prompt = `根据以下最近的游戏对话，用300字以内更新"世界状态摘要"。要包含：关键NPC及其与主角的关系、未解之谜和线索、重要已发生事件、已探索层级特征。用压缩的叙述语言，不需要任何格式。\n\n当前摘要：${t.worldSummary||"（空）"}\n\n近期对话：\n${recent}`;
+  try {
+    const res = await fetch(DS_API, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+API_KEY},
+      body: JSON.stringify({ model: DS_MODEL, max_tokens:400, temperature:0.3,
+        messages:[{role:"user",content:prompt}] })
+    });
+    const data = await res.json();
+    const summary = data.choices?.[0]?.message?.content || "";
+    if (summary) { t.worldSummary = summary; saveAll(); }
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════
+//  SYSTEM PROMPT BUILDER
+// ════════════════════════════════════════════════════════
+function buildSystemPrompt() {
+  const t = getActive();
+  const p = t.player;
+  const s = SETTINGS;
+
+  const styleNote  = getActiveStylePrompt();
+  const izNote     = IZ_PROMPTS[s.izPersonality] || IZ_PROMPTS.warm;
+  const dangerNote = s.dangerLevel > 70 ? "危险程度极高，遭遇威胁概率大，" :
+                     s.dangerLevel > 40 ? "危险程度中等，" : "危险程度较低，相对安全，";
+  const npcNote    = s.npcComplexity > 70 ? "NPC人性极其复杂，动机隐晦，行为充满矛盾，" :
+                     s.npcComplexity > 40 ? "NPC有一定人性复杂度，" : "NPC性格相对简单直接，";
+  const lenNote    = s.narrativeLength === "long"   ? "每次叙事至少300字，" :
+                     s.narrativeLength === "medium" ? "每次叙事100-200字，" : "每次叙事简洁，50-100字，";
+
+  const summaryNote = t.worldSummary
+    ? `\n【世界状态记忆摘要（务必参考）】\n${t.worldSummary}\n` : "";
+  const logNote = (t.progressLog && t.progressLog.length)
+    ? `\n【近期进展速记（按回合顺序，务必参考以保持剧情连贯）】\n${t.progressLog.slice(-15).map((e,i,arr) => `第${t.turn-(arr.length-1-i)}回合：${e}`).join("\n")}\n` : "";
+  const npcHint = (t.npcRoster && t.npcRoster.length)
+    ? `\n【已知重要NPC（保持人物一致性）】\n${t.npcRoster.map(n=>`${n.name}（${n.relation}）：${n.desc}`).join("\n")}\n` : "";
+  const customNote  = s.customPromptAppend ? `\n【自定义设定】\n${s.customPromptAppend}\n` : "";
+  const personaNote = IZ_PERSONA.trim()
+    ? `【玩家对伊兹的专属设定 — 最高优先级，必须完全遵守】\n${IZ_PERSONA.trim()}\n\n` : "";
+  const devourBlock = DEVOUR_PERSONA.trim()
+    ? `\n${DEVOUR_PERSONA.trim()}\n`
+    : "\n（本次旅程无特殊主角异能系统，按普通后室探险者处理）\n";
+
+  return `${personaNote}你是一个沉浸式后室文字冒险游戏的全能叙事引擎，扮演两个核心角色：
+【叙事者】和【伊兹】——直接接入主角${p.name}大脑神经网络的AI向导，只与${p.name}通讯，能俯瞰后室BackNet网络。
+
+【当前叙事风格指令 — 必须完全执行以下风格描述】
+${styleNote}
+
+伊兹性格：${izNote}
+${dangerNote}${npcNote}${lenNote}
+${summaryNote}${logNote}${npcHint}${customNote}
+${devourBlock}
+
+═══ BackNet原则 ═══
+真实贴吧/Reddit风格，老油条/萌新/学者/疯子/骗子各类人，内容：层级攻略/目击记录/物资交易/求救/八卦/争论
+
+═══ NPC原则 ═══
+真实人性复杂度：自私/恐惧/善意/算计/脆弱/义气并存，对话有方言/口头禅/情绪波动
+
+═══ 每次回复图片提示词（imagePrompt字段）═══
+在JSON中包含 "imagePrompt" 字段，5-10个英文单词描述当前场景
+
+═══ NPC更新（可选字段 npcUpdate）═══
+当本回合出现值得长期追踪的重要NPC时，在JSON中包含 npcUpdate 字段：
+{"npcUpdate":{"id":"唯一id","name":"名字","relation":"friendly/hostile/neutral/complex","desc":"一句话描述","lastSeen":"当前位置"}}
+
+═══ 层级更新（可选字段 levelUpdate）═══
+当进入新层级时，在JSON中包含 levelUpdate 字段：
+{"levelUpdate":{"code":"Level X","name":"层级中文名","desc":"一句话核心特征","dangerRating":"low/med/high/extreme"}}
+
+═══ 严格输出格式（纯JSON，禁止markdown）═══
+{
+  "imagePrompt": "scene in english",
+  "sessionLog": "本回合一句话核心进展，30字以内",
+  "npcUpdate": null,
+  "levelUpdate": null,
+  "stateUpdate":{
+    "hp":数字,"sanity":数字,"energy":数字,
+    "devourExp":数字,"devourLevel":数字,
+    "location":"地点","currentLevel":"层级中文名","levelCode":"Level X",
+    "threat":null或"威胁","statusEffects":[],
+    "inventoryChanges":[{"action":"add或remove","name":"物品","qty":数字,"desc":"描述"}],
+    "newDevourSkill":null或{"name":"技能名","desc":"描述","level":1},
+    "newAbsorbed":null或"被吞噬实体名"
+  },
+  "messages":[
+    {"type":"narrator","content":"叙事"},
+    {"type":"iz","content":"伊兹的话"},
+    {"type":"dialog","speaker":"NPC名","color":"#色值","content":"对话"},
+    {"type":"net","posts":[{"user":"用户名","content":"帖子","replies":[{"user":"u","content":"回复"}],"time":"X分钟前"}]},
+    {"type":"devour","target":"目标","description":"过程","gained":"获得"},
+    {"type":"system","content":"系统警告"},
+    {"type":"levelup","content":"升级描述"}
+  ],
+  "options":[
+    {"id":1,"text":"选项","type":"normal"},
+    {"id":2,"text":"选项","type":"special"},
+    {"id":3,"text":"选项","type":"danger"},
+    {"id":4,"text":"【问伊兹】xxx","type":"iz"}
+  ]
+}
+
+每次必含narrator和iz，options至少5个最多10个。
+
+当前状态：
+${p.name} | ${p.currentLevel}(${p.levelCode}) | ${p.location}
+HP:${p.hp}/${p.hpMax} | 精神:${p.sanity}/${p.sanityMax} | 能量:${p.energy}/${p.energyMax}
+暴食Lv${p.devourLevel} exp:${p.devourExp}/${p.devourExpMax}
+已吞噬:${p.devourAbsorbed.length ? p.devourAbsorbed.join("、") : "无"}
+背包:${t.inventory.map(i=>i.name+"x"+i.qty).join("、")}
+状态:${p.statusEffects.length ? p.statusEffects.join("、") : "正常"}
+威胁:${p.threat||"无"} | 暴食暴露度:${t.devourPublicKnowledge}/100 | 回合:${t.turn}`;
+}
+
+// ════════════════════════════════════════════════════════
+//  TAVILY SEARCH
+// ════════════════════════════════════════════════════════
+async function tavilySearch(query) {
+  if (!NET_ON || !TVLY_KEY) return null;
+  try {
+    const res = await fetch(TVLY_API, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+TVLY_KEY},
+      body: JSON.stringify({ query, max_results: 3, search_depth:"basic", include_answer:true })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data.results||[]).slice(0,3).map(r=>`[${r.title}] ${r.content?.substring(0,200)}`).join("\n") || data.answer || null;
+  } catch(e) { return null; }
+}
+
+// ════════════════════════════════════════════════════════
+//  DEEPSEEK API CALL (streaming)
+// ════════════════════════════════════════════════════════
+async function callDS(userMsg, searchContext) {
+  const t = getActive();
+  let enrichedMsg = searchContext
+    ? `[联网参考资料（仅供叙事参考）]\n${searchContext}\n\n[玩家行动]\n${userMsg}`
+    : userMsg;
+
+  t.convoHistory.push({ role:"user", content: enrichedMsg });
+  const msgs = t.convoHistory.slice(-22);
+  const body = {
+    model: DS_MODEL,
+    max_tokens: LENGTH_TOKENS[SETTINGS.narrativeLength] || 4000,
+    temperature: 0.92,
+    stream: true,
+    messages: [{ role:"system", content: buildSystemPrompt() }, ...msgs]
+  };
+
+  const res = await fetch(DS_API, {
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+API_KEY},
+    body: JSON.stringify(body),
+    signal: _abortCtrl ? _abortCtrl.signal : undefined
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({}));
+    throw new Error(e.error?.message || "HTTP " + res.status);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream:true });
+      for (const line of chunk.split("\n")) {
+        if (!line.startsWith("data:")) continue;
+        const data = line.slice(5).trim();
+        if (data === "[DONE]") break;
+        try { fullText += JSON.parse(data).choices?.[0]?.delta?.content || ""; } catch(_) {}
+      }
+    }
+  } catch(streamErr) {
+    if (streamErr.name !== "AbortError") throw streamErr;
+    fullText += "__ABORTED__";
+  }
+
+  t.convoHistory.push({ role:"assistant", content: fullText });
+  if (t.convoHistory.length > 44) t.convoHistory = t.convoHistory.slice(-44);
+
+  const wasAborted = fullText.includes("__ABORTED__");
+  let clean = fullText.replace("__ABORTED__","").trim()
+    .replace(/^```json\s*/i,"").replace(/^```\s*/i,"").replace(/\s*```$/i,"").trim();
+  const s = clean.indexOf("{"), e2 = clean.lastIndexOf("}");
+  if (s !== -1 && e2 !== -1) clean = clean.slice(s, e2+1);
+  try {
+    return JSON.parse(clean);
+  } catch(parseErr) {
+    if (wasAborted) {
+      const m = clean.match(/"content"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      const txt = m ? m[1].replace(/\\n/g,"\n").replace(/\\"/g,'"') : "（已停止生成）";
+      return { stateUpdate:null, messages:[{type:"narrator",content:txt+"\n\n⬛ 已停止生成"}], options:[{id:1,text:"继续刚才的内容",type:"normal"},{id:2,text:"【问伊兹】总结当前状态",type:"iz"}] };
+    }
+    throw parseErr;
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  STATE UPDATE
+// ════════════════════════════════════════════════════════
+function applyUpdate(u, resp) {
+  if (!u && !resp) return;
+  const t = getActive();
+  const p = t.player;
+
+  if (u) {
+    if (u.hp        !== undefined) p.hp        = Math.max(0, Math.min(p.hpMax, u.hp));
+    if (u.sanity    !== undefined) p.sanity    = Math.max(0, Math.min(p.sanityMax, u.sanity));
+    if (u.energy    !== undefined) p.energy    = Math.max(0, Math.min(p.energyMax, u.energy));
+    if (u.location)     p.location     = u.location;
+    if (u.currentLevel) p.currentLevel = u.currentLevel;
+    if (u.levelCode)    p.levelCode    = u.levelCode;
+    if (u.threat    !== undefined) p.threat        = u.threat;
+    if (u.statusEffects)           p.statusEffects = u.statusEffects;
+    if (u.devourExp !== undefined) p.devourExp = Math.max(0, u.devourExp);
+    if (u.devourLevel !== undefined && u.devourLevel > p.devourLevel) {
+      p.devourLevel  = u.devourLevel;
+      p.devourExpMax = u.devourLevel * 100;
+    }
+    if (u.newDevourSkill) p.devourSkills.push(u.newDevourSkill);
+    if (u.newAbsorbed)    p.devourAbsorbed.push(u.newAbsorbed);
+    (u.inventoryChanges||[]).forEach(ch => {
+      if (ch.action === "add") {
+        const ex = t.inventory.find(i=>i.name===ch.name);
+        if (ex) ex.qty += (ch.qty||1);
+        else t.inventory.push({name:ch.name,qty:ch.qty||1,desc:ch.desc||""});
+      } else if (ch.action === "remove") {
+        const idx = t.inventory.findIndex(i=>i.name===ch.name);
+        if (idx !== -1) {
+          t.inventory[idx].qty -= (ch.qty||1);
+          if (t.inventory[idx].qty <= 0) t.inventory.splice(idx,1);
+        }
+      }
+    });
+  }
+
+  if (resp && resp.npcUpdate && resp.npcUpdate.name) {
+    const nu = resp.npcUpdate;
+    const existing = t.npcRoster.find(n => n.id === nu.id || n.name === nu.name);
+    if (existing) Object.assign(existing, nu);
+    else t.npcRoster.push({ id: nu.id || Date.now().toString(), name: nu.name, relation: nu.relation || "neutral", desc: nu.desc || "", lastSeen: nu.lastSeen || "" });
+  }
+
+  if (resp && resp.levelUpdate && resp.levelUpdate.code) {
+    const lu = resp.levelUpdate;
+    if (!t.levelLog.find(l => l.code === lu.code))
+      t.levelLog.push({ code: lu.code, name: lu.name || "", desc: lu.desc || "", dangerRating: lu.dangerRating || "med", visitedAt: new Date().toLocaleString("zh-CN") });
+  }
+
+  // Archive BackNet messages
+  if (resp && resp.messages) {
+    resp.messages.filter(m => m.type === "net").forEach(m => {
+      t.backnетArchive = t.backnетArchive || [];
+      t.backnетArchive.push({ turn: t.turn + 1, posts: m.posts });
+      if (t.backnетArchive.length > 100) t.backnетArchive.shift();
+    });
+  }
+
+  t.turn++;
+  if (t.turn === 1) t.name = p.currentLevel + " · " + new Date().toLocaleDateString("zh-CN");
+  t.lastPlayedAt = new Date().toLocaleString("zh-CN");
+  updateStatusBar();
+  saveAll();
+}
+
+function updateStatusBar() {
+  const p = getActive().player;
+  document.getElementById("s-lv").textContent  = p.levelCode;
+  document.getElementById("s-hp").textContent  = p.hp+"/"+p.hpMax;
+  document.getElementById("s-san").textContent = p.sanity+"/"+p.sanityMax;
+  document.getElementById("s-en").textContent  = p.energy+"/"+p.energyMax;
+  document.getElementById("s-dv").textContent  = "Lv"+p.devourLevel+" "+p.devourExp+"/"+p.devourExpMax;
+  const thr = document.getElementById("chip-thr");
+  if (p.threat) { thr.style.display="flex"; document.getElementById("s-thr").textContent = p.threat.substring(0,6)+"…"; }
+  else thr.style.display = "none";
+  // Update net icon
+  const ni = document.getElementById("net-icon");
+  if (ni) {
+    ni.innerHTML = netIconSVG(NET_ON);
+    ni.className = NET_ON ? "net-on" : "";
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  IMAGE GENERATION
+// ════════════════════════════════════════════════════════
+function generateSceneImage(imagePrompt) {
+  if (!IMG_ON || !imagePrompt) return null;
+  if (SF_KEY) return { type:"sf", prompt: IMG_STYLE+imagePrompt, seed: Math.floor(Math.random()*99999) };
+  const fullPrompt = encodeURIComponent(IMG_STYLE+imagePrompt);
+  const seed = Math.floor(Math.random()*9999);
+  return { type:"poll", url: `${POLL_API}${fullPrompt}?width=640&height=360&seed=${seed}&nologo=true` };
+}
+
+async function fetchSFImage(imgId, prompt, seed) {
+  try {
+    const res = await fetch(SF_API, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+SF_KEY},
+      body: JSON.stringify({ model:SF_IMG_MODEL, prompt, image_size:"768x432", seed:seed||42, num_inference_steps:4 })
+    });
+    if (!res.ok) throw new Error("SF HTTP "+res.status);
+    const data = await res.json();
+    const url = data.images?.[0]?.url;
+    if (!url) throw new Error("SF: 无图片URL");
+    const loadEl = document.getElementById("img-load-"+imgId);
+    const imgEl  = document.getElementById("img-"+imgId);
+    if (imgEl)  { imgEl.src = url; imgEl.style.display = "block"; }
+    if (loadEl) { loadEl.style.display = "none"; }
+  } catch(err) {
+    const loadEl = document.getElementById("img-load-"+imgId);
+    if (loadEl) loadEl.innerHTML = "（配图生成失败："+err.message+"）";
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════
+function esc(s) { return s ? String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ""; }
+function nl(s)  { return esc(s).replace(/\n/g,"<br>"); }
+
+let _msgRenderCounter = 0;
+
+function renderMsgObj(msg, forceId) {
+  const div = document.createElement("div");
+  div.className = "msg";
+  const msgId = forceId || ("msg-"+(++_msgRenderCounter));
+  div.id = msgId;
+  div.dataset.msgId = msgId;
+
+  switch(msg.type) {
+    case "scene-img":
+      div.innerHTML = `<div class="scene-img-wrap">
+        <div class="scene-img-loading" id="img-load-${msg.imgId}">🖼️ 场景渲染中…</div>
+        <img class="scene-img" id="img-${msg.imgId}" src="${esc(msg.src)}" style="display:none"
+          onload="document.getElementById('img-load-${msg.imgId}').style.display='none';this.style.display='block'"
+          onerror="document.getElementById('img-load-${msg.imgId}').innerHTML='（场景配图加载失败）'">
+      </div>`; break;
+    case "search-ref":
+      div.innerHTML = `<div class="m-search-ref">📡 <span>联网参考</span>：${nl(msg.content)}</div>`; break;
+    case "narrator":
+      div.innerHTML = `<div class="m-narrator">${nl(msg.content)}</div>`; break;
+    case "iz": {
+      div.innerHTML = `<div class="m-iz">
+        <div class="iz-hdr">
+          <div class="iz-av" title="点击设定伊兹人格">伊</div>
+          <div>
+            <div class="iz-nm">伊兹 · IZ${IZ_PERSONA ? '<span class="iz-active-badge">已设定</span>' : ''}</div>
+            <div class="iz-tg">神经接入 · 仅主角可见 · 点击头像可设定</div>
+          </div>
+        </div>
+        <div class="iz-body">${nl(msg.content)}</div>
+      </div>`;
+      const izAvEl = div.querySelector(".iz-av");
+      if (izAvEl) {
+        const _open = (e) => { e.preventDefault(); e.stopPropagation(); openIzPersonaModal(); };
+        izAvEl.addEventListener("touchend", _open, { passive:false });
+        izAvEl.addEventListener("click", _open);
+      }
+      break;
+    }
+    case "dialog":
+      div.innerHTML = `<div class="m-dialog">
+        <div class="dlg-sp" style="color:${esc(msg.color||"#e0dcd4")}">${esc(msg.speaker)} 说道</div>
+        <div class="dlg-tx">"${nl(msg.content)}"</div>
+      </div>`; break;
+    case "net": {
+      const posts = (msg.posts||[]).map(p => {
+        const replies = (p.replies||[]).map(r => `<div class="net-r"><b style="color:var(--cold)">${esc(r.user)}：</b>${esc(r.content)}</div>`).join("");
+        return `<div class="net-post"><div class="net-u">【${esc(p.user)}】</div><div class="net-c">${nl(p.content)}</div>${replies}<div class="net-t">${esc(p.time)} · BackNet</div></div>`;
+      }).join("");
+      div.innerHTML = `<div class="m-net"><div class="net-hdr">📡 BackNet · 后室网络实时动态</div>${posts}</div>`;
+      break;
+    }
+    case "devour":
+      div.innerHTML = `<div class="m-devour">
+        <div class="dv-title">⚡ 暴食系统激活 ⚡</div>
+        <div class="dv-body"><b>目标：</b>${esc(msg.target)}<br>${nl(msg.description)}</div>
+        ${msg.gained ? `<div class="dv-gain">▲ 获得：${esc(msg.gained)}</div>` : ""}
+      </div>`; break;
+    case "system":
+      div.innerHTML = `<div class="m-system">⚠ ${esc(msg.content)} ⚠</div>`; break;
+    case "levelup":
+      div.innerHTML = `<div class="m-levelup">★ 暴食等级提升 ★<br><br>${nl(msg.content)}</div>`; break;
+    case "error":
+      div.innerHTML = `<div class="m-error">⚠ 伊兹的信号出现了干扰…<br><small style="font-size:11px;opacity:0.75;display:block;margin-top:4px">${esc(msg.content)}</small></div>`; break;
+    case "quoted-msg": {
+      const inner = renderMsgObj(msg.innerMsg, msgId+"-inner");
+      if (!inner) return null;
+      const qDiv = document.createElement("div");
+      qDiv.className = "msg"; qDiv.id = msgId; qDiv.dataset.msgId = msgId;
+      const qBar = document.createElement("div");
+      qBar.className = "quote-preview"; qBar.dataset.targetId = msg.quotedMsgId;
+      qBar.innerHTML = `<span class="qp-icon">引用</span><span class="qp-text">${esc(msg.quotedPreview)}</span><span class="qp-go">↗</span>`;
+      qBar.onclick = (e) => { e.stopPropagation(); jumpToMsg(msg.quotedMsgId); };
+      qDiv.appendChild(qBar);
+      Array.from(inner.children).forEach(c => { if (!c.classList.contains("msg-action-bar")) qDiv.appendChild(c); });
+      attachMsgActions(qDiv, msg.innerMsg);
+      return qDiv;
+    }
+    default:
+      if (msg._html) { div.innerHTML = msg._html; }
+      else return null;
+  }
+
+  const noAction = ["scene-img","search-ref","error"].includes(msg.type);
+  if (!noAction) attachMsgActions(div, msg);
+  return div;
+}
+
+function attachMsgActions(div, msg) {
+  const bar = document.createElement("div");
+  bar.className = "msg-action-bar";
+  bar.innerHTML = `
+    <button title="复制" onclick="event.stopPropagation();copyMsg(this)">📋</button>
+    <button title="引用" onclick="event.stopPropagation();quoteMsg('${div.id}',this)">💬</button>
+    <button title="编辑并重发" onclick="event.stopPropagation();editMsg(this)">✏️</button>
+    <button title="重新加载" onclick="event.stopPropagation();reloadMsg('${div.id}')">🔄</button>`;
+  div.appendChild(bar);
+  div.addEventListener("click", (e) => {
+    if (e.target.closest(".msg-action-bar,.quote-preview,.iz-av")) return;
+    toggleMsgAction(div);
+  });
+}
+
+function toggleMsgAction(div) {
+  const wasActive = div.classList.contains("active-msg");
+  document.querySelectorAll(".msg.active-msg").forEach(m => m.classList.remove("active-msg"));
+  if (!wasActive) div.classList.add("active-msg");
+}
+
+document.addEventListener("click", (e) => {
+  const gs = document.getElementById("game-screen");
+  if (!gs || gs.style.display === "none") return;
+  if (!e.target.closest(".msg")) document.querySelectorAll(".msg.active-msg").forEach(m => m.classList.remove("active-msg"));
+  if (!e.target.closest(".plus-menu") && !e.target.closest(".plus-btn") && document.getElementById("plus-menu-container").innerHTML) closePlusMenu();
+  if (!e.target.closest(".more-menu") && !e.target.closest("#more-nav-btn") && document.getElementById("more-menu-container").innerHTML) closeMoreMenu();
+});
+
+function copyMsg(btn) {
+  const msgDiv = btn.closest(".msg");
+  const clone = msgDiv.cloneNode(true);
+  clone.querySelectorAll(".msg-action-bar,.quote-preview").forEach(e=>e.remove());
+  navigator.clipboard.writeText((clone.innerText||clone.textContent||"").trim()).catch(()=>{});
+  btn.textContent = "✅"; setTimeout(()=>{btn.textContent="📋";},1200);
+}
+
+let _pendingQuote = null;
+
+function quoteMsg(msgId, btn) {
+  const msgDiv = document.getElementById(msgId);
+  if (!msgDiv) return;
+  const clone = msgDiv.cloneNode(true);
+  clone.querySelectorAll(".msg-action-bar,.quote-preview").forEach(e=>e.remove());
+  _pendingQuote = { msgId, preview: (clone.innerText||clone.textContent||"").trim().substring(0,120) };
+  renderInputQuote();
+  document.getElementById("cinput").focus();
+  document.querySelectorAll(".msg.active-msg").forEach(m=>m.classList.remove("active-msg"));
+}
+
+function renderInputQuote() {
+  const c = document.getElementById("input-quote-container");
+  if (!_pendingQuote) { c.innerHTML = ""; return; }
+  c.innerHTML = `<div class="input-quote-wrap">
+    <span style="color:var(--gold);font-size:10px;font-family:'Share Tech Mono',monospace;flex-shrink:0">引用</span>
+    <span class="iq-text">${esc(_pendingQuote.preview)}</span>
+    <button class="iq-close" onclick="clearInputQuote()">✕</button>
+  </div>`;
+}
+function clearInputQuote() { _pendingQuote = null; renderInputQuote(); }
+
+function editMsg(btn) {
+  const msgDiv = btn.closest(".msg");
+  const clone = msgDiv.cloneNode(true);
+  clone.querySelectorAll(".msg-action-bar,.quote-preview").forEach(e=>e.remove());
+  document.getElementById("cinput").value = (clone.innerText||clone.textContent||"").trim().substring(0,200);
+  document.getElementById("cinput").focus();
+  document.querySelectorAll(".msg.active-msg").forEach(m=>m.classList.remove("active-msg"));
+}
+
+function reloadMsg(msgId) {
+  if (processing) return;
+  document.querySelectorAll(".msg.active-msg").forEach(m=>m.classList.remove("active-msg"));
+  const t = getActive();
+  if (!t.convoHistory.length) return;
+  const lastUser = [...t.convoHistory].reverse().find(m => m.role === "user");
+  if (!lastUser) return;
+  const lastAssIdx = t.convoHistory.map(m=>m.role).lastIndexOf("assistant");
+  if (lastAssIdx !== -1) t.convoHistory.splice(lastAssIdx, 1);
+  processAction(lastUser.content);
+}
+
+function jumpToMsg(msgId) {
+  const el = document.getElementById(msgId);
+  if (!el) return;
+  el.scrollIntoView({ behavior:"smooth", block:"center" });
+  el.classList.remove("flash-hl"); void el.offsetWidth; el.classList.add("flash-hl");
+  setTimeout(()=>el.classList.remove("flash-hl"), 1300);
+}
+
+function addMsgToFeed(msgObj, save=true) {
+  const feed = document.getElementById("feed");
+  const typing = document.getElementById("typing-row");
+  const el = renderMsgObj(msgObj);
+  if (!el) return;
+  if (typing) feed.insertBefore(el, typing);
+  else feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+  if (save) {
+    const t = getActive();
+    t.renderedMessages = t.renderedMessages || [];
+    if (t.renderedMessages.length > 60) t.renderedMessages.shift();
+    t.renderedMessages.push(msgObj);
+  }
+  updateScrollBtns();
+}
+
+function addMessages(msgs, searchRef) {
+  if (searchRef) addMsgToFeed({ type:"search-ref", content: searchRef.substring(0,120)+"…" });
+  msgs.forEach((m,i) => setTimeout(() => addMsgToFeed(m), i*110));
+  setTimeout(() => { document.getElementById("feed").scrollTop = 99999; }, msgs.length*110+200);
+}
+
+function showTyping() {
+  const feed = document.getElementById("feed");
+  let t = document.getElementById("typing-row");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "typing-row";
+    t.className = "typing";
+    t.innerHTML = `<div style="display:flex;flex-direction:column;gap:5px;width:100%">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="iz-av" style="cursor:default;flex-shrink:0">伊</div>
+        <div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>
+        <div class="typing-lbl">伊兹正在传输…</div>
+      </div>
+      <div id="typing-subtitle" style="display:none;padding-left:32px;min-height:20px"></div>
+    </div>`;
+    feed.appendChild(t);
+  }
+  t.style.display = "flex";
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function hideTyping() {
+  const t = document.getElementById("typing-row");
+  if (t) t.style.display = "none";
+  hideNetSearching();
+}
+
+function showNetSearching() {
+  const sub = document.getElementById("typing-subtitle");
+  if (!sub) return;
+  sub.style.display = "block";
+  sub.innerHTML = `<span style="color:var(--cold);font-family:'Share Tech Mono',monospace;font-size:10.5px;display:inline-flex;align-items:center;gap:0">
+    <span class="net-search-dot"></span>正在联网搜索后室资料…
+  </span>`;
+  const feed = document.getElementById("feed");
+  if (feed) feed.scrollTop = feed.scrollHeight;
+}
+
+function hideNetSearching() {
+  const sub = document.getElementById("typing-subtitle");
+  if (!sub) return;
+  sub.style.display = "none";
+  sub.innerHTML = "";
+}
+
+// ════════════════════════════════════════════════════════
+//  PROCESS ACTION
+// ════════════════════════════════════════════════════════
+async function processAction(action) {
+  if (processing) return;
+  processing = true;
+  _abortCtrl = new AbortController();
+  renderOptions([]);
+  document.getElementById("sbtn").disabled = true;
+  showStopBtn(true);
+  showTyping();
+  trackInputFrequency(action);
+
+  try {
+    let searchRef = null;
+    if (NET_ON && TVLY_KEY) {
+      const t = getActive();
+      showNetSearching();
+      try {
+        searchRef = await tavilySearch(`后室 backrooms ${t.player.currentLevel} ${action.substring(0,30)}`);
+      } finally {
+        hideNetSearching();
+      }
+    }
+    const resp = await callDS(action, searchRef);
+    hideTyping();
+
+    if (resp.stateUpdate) applyUpdate(resp.stateUpdate, resp);
+    else applyUpdate(null, resp);
+
+    if (resp.sessionLog && typeof resp.sessionLog === "string") {
+      const t = getActive();
+      t.progressLog = t.progressLog || [];
+      t.progressLog.push(resp.sessionLog.trim().substring(0,60));
+      if (t.progressLog.length > 50) t.progressLog.shift();
+      if (!resp.stateUpdate) saveAll();
+    }
+
+    if (IMG_ON && resp.imagePrompt) {
+      const imgResult = generateSceneImage(resp.imagePrompt);
+      if (imgResult) {
+        const imgId = Date.now().toString();
+        if (imgResult.type === "poll") addMsgToFeed({ type:"scene-img", src: imgResult.url, imgId });
+        else if (imgResult.type === "sf") { addMsgToFeed({ type:"scene-img", src:"", imgId }); fetchSFImage(imgId, imgResult.prompt, imgResult.seed); }
+      }
+    }
+
+    if (resp.messages?.length) addMessages(resp.messages, searchRef ? searchRef.substring(0,100) : null);
+    setTimeout(() => { if (resp.options) renderOptions(resp.options); }, (resp.messages?.length||0)*110+300);
+    updateWorldSummary();
+
+  } catch(err) {
+    hideTyping();
+    console.error(err);
+    addMsgToFeed({ type:"error", content: err.message || "未知错误" }, false);
+    renderOptions([{id:1,text:"重新尝试上一个行动",type:"normal"},{id:2,text:"【问伊兹】请报告当前状态",type:"iz"}]);
+  }
+
+  processing = false; _abortCtrl = null;
+  document.getElementById("sbtn").disabled = false;
+  showStopBtn(false);
+}
+
+function trackInputFrequency(text) {
+  if (!text || text.startsWith("[") || text.length > 100) return;
+  const t = getActive();
+  if (!t.inputFrequency) t.inputFrequency = {};
+  const key = text.trim().substring(0,80);
+  t.inputFrequency[key] = (t.inputFrequency[key] || 0) + 1;
+  if (t.inputFrequency[key] >= 2 && !t.quickActions.find(q => q.text === key)) {
+    t.quickActions.push({ id: Date.now().toString(), text: key, pinned: false, freq: t.inputFrequency[key] });
+    saveAll();
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  INPUT HANDLERS
+// ════════════════════════════════════════════════════════
+function handleSend() {
+  const inp = document.getElementById("cinput");
+  const v = inp.value.trim();
+  if (!v || processing) return;
+  inp.value = "";
+  let action = v;
+  if (_pendingQuote) {
+    action = `[引用上文内容："${_pendingQuote.preview.substring(0,80)}…"]\n${v}`;
+    addMsgToFeed({ type:"quoted-msg", quotedMsgId:_pendingQuote.msgId, quotedPreview:_pendingQuote.preview, innerMsg:{type:"narrator",content:"主角："+v} });
+    clearInputQuote();
+  }
+  processAction(action);
+}
+
+function askIz() {
+  if (processing) return;
+  const n = getActive().player.name;
+  processAction(`[${n}在心里轻声呼唤伊兹，请求她详细报告：当前层级的情报与危险评级、自身全部状态分析、背包物资评估、暴食系统建议]`);
+}
+
+function toggleNet() {
+  NET_ON = !NET_ON;
+  updateStatusBar();
+  saveAll();
+}
+
+function showStopBtn(visible) {
+  const btn = document.getElementById("stop-btn");
+  const sbtn = document.getElementById("sbtn");
+  if (!btn || !sbtn) return;
+  if (visible) { btn.classList.add("visible"); sbtn.style.display="none"; }
+  else         { btn.classList.remove("visible"); sbtn.style.display=""; }
+}
+
+function stopGeneration() { if (_abortCtrl) _abortCtrl.abort(); }
+
+// ════════════════════════════════════════════════════════
+//  SAFE TOUCH TOGGLE
+// ════════════════════════════════════════════════════════
+let _toggleBusy = false;
+function _safeTouchToggle(fn) {
+  return function(e) {
+    e.preventDefault();
+    if (_toggleBusy) return;
+    _toggleBusy = true;
+    fn();
+    setTimeout(()=>{ _toggleBusy=false; }, 50);
+  };
+}
+
+// ════════════════════════════════════════════════════════
+//  MORE MENU (宫格, slides from right)
+// ════════════════════════════════════════════════════════
+let _moreOpen = false;
+
+function toggleMoreMenu() {
+  if (_moreOpen) closeMoreMenu();
+  else openMoreMenu();
+}
+
+function openMoreMenu() {
+  _moreOpen = true;
+  const container = document.getElementById("more-menu-container");
+
+  const items = [
+    { icon: ICONS.npc,      label: "NPC图谱",   action: "openSlidePanel('npc')" },
+    { icon: ICONS.quick,    label: "快捷行动",   action: "openSlidePanel('quickactions')" },
+    { icon: ICONS.settings, label: "游戏设定",   action: "openModal('settings')" },
+    { icon: ICONS.keys,     label: "密钥配置",   action: "openSlidePanel('keys')" },
+    { icon: ICONS.log,      label: "进展日志",   action: "openSlidePanel('progresslog')" },
+    { icon: ICONS.backnet,  label: "BackNet",    action: "openSlidePanel('backnet')" },
+    { icon: ICONS.iz,       label: "伊兹设定",   action: "openIzPersonaModal()" },
+    { icon: ICONS.devour,   label: "异能设定",   action: "openDevourPersonaModal()" },
+    { icon: ICONS.export,   label: "导出历史",   action: "openSlidePanel('export')" },
+  ];
+
+  const gridHtml = items.map(item =>
+    `<div class="more-grid-item" onclick="closeMoreMenu();setTimeout(()=>{${item.action}},80)">
+      <div class="mg-icon">${item.icon}</div>
+      <div class="mg-label">${item.label}</div>
+    </div>`
+  ).join("");
+
+  container.innerHTML = `
+    <div class="more-menu-bg" onclick="closeMoreMenu()"></div>
+    <div class="more-menu" id="more-menu">
+      <div class="more-menu-title">功 能 面 板</div>
+      <div class="more-grid">${gridHtml}</div>
+    </div>`;
+}
+
+function closeMoreMenu() {
+  _moreOpen = false;
+  document.getElementById("more-menu-container").innerHTML = "";
+}
+
+// ════════════════════════════════════════════════════════
+//  PLUS MENU (叙事风格 + 搜索)
+// ════════════════════════════════════════════════════════
+let _plusOpen = false;
+
+function togglePlusMenu() {
+  if (_plusOpen) closePlusMenu();
+  else openPlusMenu();
+}
+
+function openPlusMenu() {
+  _plusOpen = true;
+  document.getElementById("plus-btn").classList.add("open");
+  const s = SETTINGS;
+  const container = document.getElementById("plus-menu-container");
+
+  // Build builtin chips
+  const builtinChips = Object.entries(BUILTIN_STYLE_PRESETS).map(([key, val]) => {
+    const active = s.narrativeStyle === key ? "active-style" : "";
+    return `<div class="style-chip ${active}" data-style="${key}" data-builtin="true" onclick="selectStyle('${key}')">${val.label}</div>`;
+  }).join("");
+
+  // Build user chips
+  const userChips = USER_STYLES.map(us => {
+    const active = (s.narrativeStyle === "user" && s.customStyleId === us.id) ? "active-style user-style" : "user-style";
+    return `<div class="style-chip-wrap" data-us-id="${us.id}">
+      <div class="style-chip ${active}" data-style="user" data-userid="${us.id}" onclick="selectUserStyle('${us.id}')">${esc(us.label)}</div>
+      <button class="style-chip-del" onclick="deleteUserStyle('${us.id}')">×</button>
+    </div>`;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="plus-menu-bg" onclick="closePlusMenu()"></div>
+    <div class="plus-menu" id="plus-menu">
+      <div class="pm-section">
+        <div class="pm-section-title">叙事风格</div>
+        <div class="pm-styles" id="pm-styles">${builtinChips}${userChips}</div>
+        <!-- Add style button -->
+        <button class="style-add-btn" id="style-add-btn" onclick="toggleStyleCreator()">＋ 添加自定义风格</button>
+        <!-- Style creator (hidden by default) -->
+        <div class="style-creator" id="style-creator">
+          <input class="style-creator-input" id="sc-name" type="text" placeholder="风格名称（如：赛博朋克）" maxlength="12" autocomplete="off">
+          <textarea class="style-creator-ta" id="sc-prompt" placeholder="描述你想要的叙事风格，越详细越好…" rows="4" maxlength="3000"></textarea>
+          <button class="style-creator-save" onclick="saveUserStyle()">✓ 保存风格</button>
+        </div>
+      </div>
+      <div class="pm-divider"></div>
+      <div class="pm-section" style="padding-bottom:10px">
+        <div class="pm-item" onclick="closePlusMenu();setTimeout(toggleSearch,100)">
+          <span class="pm-icon" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center">${ICONS.search}</span>
+          <span class="pm-label">搜索历史记录</span>
+        </div>
+        <div class="pm-item" onclick="closePlusMenu();setTimeout(()=>openSlidePanel('topics'),100)">
+          <span class="pm-icon">📂</span>
+          <span class="pm-label">话题管理</span>
+          <span class="pm-sub" style="font-size:10px;color:var(--txt3)">${TOPICS.length} 个旅程</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function closePlusMenu() {
+  _plusOpen = false;
+  const btn = document.getElementById("plus-btn");
+  if (btn) btn.classList.remove("open");
+  document.getElementById("plus-menu-container").innerHTML = "";
+}
+
+function selectStyle(key) {
+  SETTINGS.narrativeStyle = key;
+  SETTINGS.customStyleId = "";
+  saveAll();
+  // Re-render chips
+  _updateStyleChipsUI();
+}
+
+function selectUserStyle(id) {
+  SETTINGS.narrativeStyle = "user";
+  SETTINGS.customStyleId = id;
+  saveAll();
+  _updateStyleChipsUI();
+}
+
+function _updateStyleChipsUI() {
+  const s = SETTINGS;
+  document.querySelectorAll(".style-chip").forEach(c => {
+    if (c.dataset.builtin) {
+      c.classList.toggle("active-style", s.narrativeStyle === c.dataset.style);
+    } else if (c.dataset.userid) {
+      c.classList.toggle("active-style", s.narrativeStyle === "user" && s.customStyleId === c.dataset.userid);
+    }
+  });
+}
+
+function toggleStyleCreator() {
+  const block = document.getElementById("style-creator");
+  const btn   = document.getElementById("style-add-btn");
+  if (!block) return;
+  const isOpen = block.classList.contains("open");
+  block.classList.toggle("open", !isOpen);
+  if (btn) btn.textContent = isOpen ? "＋ 添加自定义风格" : "▲ 收起";
+  if (!isOpen) {
+    setTimeout(() => document.getElementById("sc-name")?.focus(), 80);
+  }
+}
+
+function saveUserStyle() {
+  const nameEl   = document.getElementById("sc-name");
+  const promptEl = document.getElementById("sc-prompt");
+  if (!nameEl || !promptEl) return;
+  const label  = nameEl.value.trim();
+  const prompt = promptEl.value.trim();
+  if (!label) { nameEl.style.borderColor="#ff4a4a"; setTimeout(()=>nameEl.style.borderColor="",1000); return; }
+  if (!prompt) { promptEl.style.borderColor="#ff4a4a"; setTimeout(()=>promptEl.style.borderColor="",1000); return; }
+  const newStyle = { id: "us-"+Date.now(), label, prompt };
+  USER_STYLES.push(newStyle);
+  // Auto-select the new style
+  SETTINGS.narrativeStyle = "user";
+  SETTINGS.customStyleId = newStyle.id;
+  saveAll();
+  // Rebuild plus menu to show new chip
+  closePlusMenu();
+  openPlusMenu();
+}
+
+function deleteUserStyle(id) {
+  USER_STYLES = USER_STYLES.filter(u => u.id !== id);
+  if (SETTINGS.customStyleId === id) {
+    SETTINGS.narrativeStyle = "surreal";
+    SETTINGS.customStyleId = "";
+  }
+  saveAll();
+  // Rebuild plus menu
+  closePlusMenu();
+  openPlusMenu();
+}
+
+// ════════════════════════════════════════════════════════
+//  SLIDE PANELS
+// ════════════════════════════════════════════════════════
+function openSlidePanel(type) {
+  const container = document.getElementById("panel-container");
+  const t = getActive();
+  const p = t.player;
+  let html = "";
+
+  if (type === "backpack") {
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">▣ 背包物品</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">`;
+    if (!t.inventory.length) html += `<div style="color:var(--txt2);text-align:center;padding:30px;font-size:13px">背包是空的</div>`;
+    else t.inventory.forEach(i => {
+      html += `<div class="item-card"><div class="item-n">${esc(i.name)}<span class="item-q">x${i.qty}</span></div><div class="item-d">${esc(i.desc)}</div></div>`;
+    });
+    html += `</div></div>`;
+  }
+  else if (type === "status") {
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">◈ 详细状态</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">
+        <div class="sec-t">▣ 生命体征</div>`;
+    [[`生命值 HP`,p.hp,p.hpMax,"hp"],[`精神值 SAN`,p.sanity,p.sanityMax,"san"],[`体力能量`,p.energy,p.energyMax,"en"]].forEach(([l,v,m,c]) => {
+      html += `<div class="srow"><div class="slbl">${l}<span>${v}/${m}</span></div><div class="sbg"><div class="sf ${c}" style="width:${Math.round(v/m*100)}%"></div></div></div>`;
+    });
+    html += `<div class="sec-t" style="margin-top:16px">◈ 暴食系统</div>
+      <div class="srow"><div class="slbl">等级 Lv.${p.devourLevel}<span>${p.devourExp}/${p.devourExpMax} EXP</span></div><div class="sbg"><div class="sf dv" style="width:${Math.round(p.devourExp/p.devourExpMax*100)}%"></div></div></div>`;
+    p.devourSkills.forEach(sk => {
+      html += `<div class="sk-card"><div class="sk-n">${esc(sk.name)}<span class="sk-lv">Lv.${sk.level}</span></div><div class="sk-d">${esc(sk.desc)}</div></div>`;
+    });
+    if (p.devourAbsorbed.length) {
+      html += `<div class="sec-t" style="margin-top:16px">◉ 已吞噬实体</div>`;
+      p.devourAbsorbed.forEach(a => { html += `<div style="color:var(--txt2);font-size:12px;padding:4px 0;border-bottom:1px solid var(--bdr)">· ${esc(a)}</div>`; });
+    }
+    if (p.statusEffects.length) {
+      html += `<div class="sec-t" style="margin-top:16px;color:var(--danger)">⚠ 状态效果</div>`;
+      p.statusEffects.forEach(e => { html += `<div style="color:var(--danger);font-size:12px;padding:4px 0">· ${esc(e)}</div>`; });
+    }
+    if (p.threat) html += `<div class="threat-box"><b>⚠ 当前威胁：</b>${esc(p.threat)}</div>`;
+    if (t.worldSummary) {
+      html += `<div class="sec-t" style="margin-top:16px">📖 世界记忆摘要</div>
+        <div style="color:var(--txt2);font-size:12px;line-height:1.8;padding:10px;background:var(--bg2);border-radius:8px;border:1px solid var(--bdr)">${nl(t.worldSummary)}</div>`;
+    }
+    html += `</div></div>`;
+  }
+  else if (type === "map") {
+    const lvHtml = t.levelLog.length
+      ? t.levelLog.map(l => {
+          const dangerClass = {low:"low",med:"med",high:"high",extreme:"extreme"}[l.dangerRating]||"med";
+          const dangerLabel = {low:"低危",med:"中危",high:"高危",extreme:"极危"}[l.dangerRating]||"中危";
+          return `<div class="lvlog-card">
+            <div class="lvlog-code">${esc(l.code)}</div>
+            <div class="lvlog-info">
+              <div class="lvlog-name">${esc(l.name)}</div>
+              <div class="lvlog-desc">${esc(l.desc)}</div>
+              <div class="lvlog-danger ${dangerClass}">危险等级：${dangerLabel}</div>
+            </div>
+          </div>`;
+        }).join("")
+      : `<div style="color:var(--txt2);font-size:12px;padding:16px;text-align:center">尚未记录任何层级<br><span style="font-size:10px;color:var(--txt3)">探索新层级后自动更新</span></div>`;
+
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">◉ 层级图鉴</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">
+        <div style="background:var(--bg2);border:1px solid var(--bdr2);border-radius:10px;padding:12px;margin-bottom:14px">
+          <div class="sec-t">当前所在</div>
+          <div style="color:var(--txt);font-size:17px;font-weight:600">${esc(p.currentLevel)}</div>
+          <div style="color:var(--cold);font-family:'Share Tech Mono',monospace;font-size:12px;margin:4px 0">${esc(p.levelCode)}</div>
+          <div style="color:var(--txt2);font-size:12px">📍 ${esc(p.location)}</div>
+        </div>
+        <div class="sec-t">已探索层级（${t.levelLog.length}处）</div>
+        ${lvHtml}
+      </div></div>`;
+  }
+  else if (type === "npc") {
+    const npcHtml = t.npcRoster.length
+      ? t.npcRoster.map(n => {
+          const relLabel = {friendly:"友善",hostile:"敌对",neutral:"中立",complex:"复杂"}[n.relation]||"中立";
+          return `<div class="npc-card">
+            <div class="npc-name">${esc(n.name)}<span class="npc-rel ${n.relation}">${relLabel}</span></div>
+            <div class="npc-desc">${esc(n.desc)}</div>
+            ${n.lastSeen ? `<div class="npc-last">最后出现：${esc(n.lastSeen)}</div>` : ""}
+          </div>`;
+        }).join("")
+      : `<div style="color:var(--txt2);font-size:12px;padding:16px;text-align:center">暂无重要NPC记录<br><span style="font-size:10px;color:var(--txt3)">AI会在关键角色出现时自动记录</span></div>`;
+
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">👥 NPC 图谱</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">${npcHtml}</div></div>`;
+  }
+  else if (type === "quickactions") {
+    const qas = [...(t.quickActions||[])].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.freq||0)-(a.freq||0));
+    const qaHtml = qas.length
+      ? qas.map(q => `<div class="qa-item" id="qa-${q.id}">
+          <div class="qa-text" onclick="sendQuickAction('${esc(q.text)}')">${esc(q.text)}</div>
+          <span class="qa-freq">${q.freq||1}次</span>
+          <span class="qa-pin" onclick="togglePinQA('${q.id}')" title="${q.pinned?'取消固定':'固定'}">${q.pinned?'📌':'·'}</span>
+          <button class="qa-del" onclick="deleteQA('${q.id}')">✕</button>
+        </div>`).join("")
+      : `<div style="color:var(--txt2);font-size:12px;padding:16px;text-align:center">常用指令会在这里自动推荐<br><span style="font-size:10px;color:var(--txt3)">重复发送相同指令即可触发</span></div>`;
+
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">⚡ 快捷行动</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">
+        <div class="qa-add-row">
+          <input class="qa-add-input" id="qa-add-input" type="text" placeholder="手动添加常用指令…" maxlength="100">
+          <button class="qa-add-btn" onclick="addQA()">添加</button>
+        </div>
+        ${qaHtml}
+      </div></div>`;
+  }
+  else if (type === "keys") {
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">🔑 密钥配置</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">
+
+        <div class="sec-t">◈ 叙事引擎 (DeepSeek / AI)</div>
+        <div style="color:var(--txt2);font-size:11.5px;line-height:1.8;margin-bottom:10px">当前模型：<span style="color:var(--gold);font-family:'Share Tech Mono',monospace">${DS_MODEL}</span></div>
+        <div class="key-change-row">
+          <span class="key-change-label">API Key</span>
+          <input class="key-change-input" type="password" id="panel-ds-key" placeholder="更换 Key" value="${API_KEY?'••••'+API_KEY.slice(-4):''}">
+          <button class="key-save-btn" onclick="savePanelKey('ds')">保存</button>
+        </div>
+        <div class="model-preset-row" id="panel-model-chips" style="margin-top:10px"></div>
+        <div class="custom-endpoint-block" id="panel-custom-block">
+          <div class="ep-row"><span class="ep-label">API 端点</span><input class="ep-input" id="panel-ep-url" value="${esc(DS_API)}" spellcheck="false" autocomplete="off"></div>
+          <div class="ep-row"><span class="ep-label">模型名称</span><input class="ep-input" id="panel-ep-model" value="${esc(DS_MODEL)}" spellcheck="false" autocomplete="off"></div>
+        </div>
+        <button onclick="savePanelModelConfig()" style="width:100%;background:var(--bg3);border:1px solid var(--bdr2);border-radius:8px;padding:8px;color:var(--txt2);font-size:12px;font-family:'Share Tech Mono',monospace;cursor:pointer;margin-top:8px">保存模型配置</button>
+
+        <div class="sec-t" style="margin-top:20px">◈ Tavily 联网搜索</div>
+        <div style="color:var(--txt2);font-size:11.5px;line-height:1.85;margin-bottom:10px">
+          开启后AI叙事前会先搜索真实后室社区内容作为参考。<br>
+          获取免费Key：<span style="color:var(--cold)">app.tavily.com</span>
+        </div>
+        <div class="key-change-row">
+          <span class="key-change-label">Tavily Key</span>
+          <input class="key-change-input" type="password" id="panel-tvly-key" placeholder="tvly-xxxxxxxx" value="${TVLY_KEY ? '••••'+TVLY_KEY.slice(-4) : ''}">
+          <button class="key-save-btn" onclick="savePanelKey('tvly')">保存</button>
+        </div>
+        <div class="toggle-row" style="margin-top:10px">
+          <div><div class="toggle-label">启用联网搜索</div></div>
+          <div class="toggle ${NET_ON?'on':''}" id="panel-net-toggle"></div>
+        </div>
+
+        <div class="sec-t" style="margin-top:20px">◈ 硅基流动图片生成</div>
+        <div style="color:var(--txt2);font-size:11.5px;line-height:1.85;margin-bottom:10px">
+          不填则使用 Pollinations AI（可能较慢）。<br>
+          获取Key：<span style="color:var(--cold)">cloud.siliconflow.cn</span>
+        </div>
+        <div class="key-change-row">
+          <span class="key-change-label">SF Key</span>
+          <input class="key-change-input" type="password" id="panel-sf-key" placeholder="sk-xxxxxxxx（可留空）" value="${SF_KEY ? '••••'+SF_KEY.slice(-4) : ''}">
+          <button class="key-save-btn" onclick="savePanelKey('sf')">保存</button>
+        </div>
+        <div class="toggle-row" style="margin-top:10px">
+          <div><div class="toggle-label">🖼️ 场景配图</div><div style="color:var(--txt3);font-size:11px;margin-top:2px">有SF Key时优先使用，否则用Pollinations</div></div>
+          <div class="toggle ${IMG_ON?'on':''}" id="panel-img-toggle"></div>
+        </div>
+
+        <div class="sec-t" style="margin-top:20px">◈ DeepSeek 余额查询</div>
+        <div class="balance-box">
+          <div style="color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace">可用余额</div>
+          <div class="balance-amount" id="balance-amount">—</div>
+          <div class="balance-sub" id="balance-sub">点击刷新查询</div>
+          <button class="balance-refresh" onclick="fetchBalance()">🔄 刷新余额</button>
+        </div>
+        <div class="balance-note">⚠ 仅支持 DeepSeek 官方 API（api.deepseek.com）</div>
+      </div></div>`;
+  }
+  else if (type === "progresslog") {
+    const logs = (t.progressLog || []).slice().reverse();
+    const logHtml = logs.length
+      ? logs.map((e, i, arr) => {
+          const turn = t.turn - i;
+          return `<div class="plog-item"><span class="plog-turn">T${turn}</span><span class="plog-text">${esc(e)}</span></div>`;
+        }).join("")
+      : `<div style="color:var(--txt2);font-size:12px;padding:16px;text-align:center">尚无进展记录<br><span style="font-size:10px;color:var(--txt3)">游戏过程中自动记录</span></div>`;
+
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">📖 进展日志</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">
+        <div style="color:var(--txt3);font-size:10.5px;font-family:'Share Tech Mono',monospace;margin-bottom:10px">共 ${t.progressLog?.length||0} 条 · 最新在上</div>
+        ${logHtml}
+      </div></div>`;
+  }
+  else if (type === "backnet") {
+    const archive = (t.backnетArchive || []).slice().reverse();
+    const bnaHtml = archive.length
+      ? archive.map(entry => {
+          const posts = (entry.posts||[]).map(p =>
+            `<div class="net-post" style="font-size:12px">
+              <div class="net-u" style="font-size:10px">【${esc(p.user)}】</div>
+              <div class="net-c" style="font-size:12px">${nl(p.content)}</div>
+              ${(p.replies||[]).map(r=>`<div class="net-r" style="font-size:11px"><b style="color:var(--cold)">${esc(r.user)}：</b>${esc(r.content)}</div>`).join("")}
+            </div>`
+          ).join("");
+          return `<div class="bna-item">
+            <div class="bna-turn">回合 ${entry.turn}</div>
+            ${posts}
+          </div>`;
+        }).join("")
+      : `<div style="color:var(--txt2);font-size:12px;padding:16px;text-align:center">暂无BackNet记录<br><span style="font-size:10px;color:var(--txt3)">AI生成的BackNet内容会存档于此</span></div>`;
+
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">🌐 BackNet 存档</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">
+        <div style="color:var(--txt3);font-size:10.5px;font-family:'Share Tech Mono',monospace;margin-bottom:10px">共 ${archive.length} 条 · 最新在上</div>
+        ${bnaHtml}
+      </div></div>`;
+  }
+  else if (type === "topics") {
+    const topicsHtml = TOPICS.map(tp => {
+      const isActive = tp.id === ACTIVE_TOPIC_ID;
+      return `<div style="background:var(--bg2);border:1px solid ${isActive?'var(--gold2)':'var(--bdr)'};border-radius:11px;padding:12px 13px;margin-bottom:9px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+          <div style="flex:1;min-width:0">
+            <div id="tname-disp-${tp.id}" style="color:var(--txt);font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(tp.charName||tp.player.name)} — ${esc(tp.name)}</div>
+            <div style="color:var(--txt2);font-size:10px;font-family:'Share Tech Mono',monospace;margin-top:2px">${esc(tp.player.levelCode)} · 回合${tp.turn} · ${esc(tp.lastPlayedAt)}</div>
+          </div>
+          ${isActive ? '<span style="color:var(--gold);font-family:\'Share Tech Mono\',monospace;font-size:9px;flex-shrink:0;border:1px solid var(--gold2);border-radius:6px;padding:1px 5px">当前</span>' : ''}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${!isActive ? `<button onclick="switchTopic('${tp.id}');closePanels()" style="flex:1;min-width:60px;background:linear-gradient(135deg,#c8a76c,#8a6e3a);border:none;border-radius:7px;padding:6px 8px;color:#06060a;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans SC',sans-serif">进入旅程</button>` : ''}
+          <button onclick="renameTopic('${tp.id}')" style="flex:1;min-width:60px;background:var(--bg3);border:1px solid var(--bdr2);border-radius:7px;padding:6px 8px;color:var(--txt2);font-size:11px;cursor:pointer;font-family:'Share Tech Mono',monospace">重命名</button>
+          <button onclick="openSlidePanel('export');closePanels();setTimeout(()=>{openSlidePanel('export');document.getElementById('export-tid')&&(document.getElementById('export-tid').value='${tp.id}');},50)" style="flex:1;min-width:60px;background:var(--bg3);border:1px solid var(--bdr2);border-radius:7px;padding:6px 8px;color:var(--txt2);font-size:11px;cursor:pointer;font-family:'Share Tech Mono',monospace">导出</button>
+          ${TOPICS.length>1 ? `<button onclick="deleteTopicFromPanel('${tp.id}')" style="background:rgba(255,74,74,0.08);border:1px solid rgba(255,74,74,0.25);border-radius:7px;padding:6px 9px;color:var(--danger);font-size:11px;cursor:pointer;font-family:'Share Tech Mono',monospace">删除</button>` : ''}
+        </div>
+      </div>`;
+    }).join("");
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">📂 话题管理</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">
+        <div style="color:var(--txt3);font-size:10px;font-family:'Share Tech Mono',monospace;margin-bottom:10px">共 ${TOPICS.length} 个旅程存档</div>
+        ${topicsHtml}
+        <button onclick="createNewTopicFromPanel()" style="width:100%;background:none;border:1px dashed var(--bdr2);border-radius:10px;padding:11px;color:var(--txt2);font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;letter-spacing:1px;margin-top:4px">＋ 开启新的旅程</button>
+      </div></div>`;
+  }
+  else if (type === "export") {
+    // Collect all topics for the selector
+    const topicOpts = TOPICS.map(tp =>
+      `<option value="${tp.id}" ${tp.id===ACTIVE_TOPIC_ID?'selected':''}>${esc(tp.charName||tp.player.name)} — ${esc(tp.name)} (回合${tp.turn})</option>`
+    ).join("");
+    html = `<div class="panel-bg" onclick="closePanels()"></div><div class="panel">
+      <div class="ph"><div class="pt">📄 导出历史</div><button class="pclose" onclick="closePanels()">✕</button></div>
+      <div class="pb">
+        <div class="sec-t">◈ 选择旅程</div>
+        <select id="export-tid" onchange="refreshExportInfo()" style="width:100%;background:var(--bg2);border:1px solid var(--bdr2);border-radius:8px;padding:8px 10px;color:var(--txt);font-family:'Noto Sans SC',sans-serif;font-size:12px;outline:none;margin-bottom:12px">${topicOpts}</select>
+
+        <div class="sec-t">◈ 导出范围（回合）</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+          <div style="flex:1">
+            <div style="color:var(--txt3);font-size:10px;font-family:'Share Tech Mono',monospace;margin-bottom:4px">起始回合</div>
+            <input id="export-from" type="number" min="0" value="0" style="width:100%;background:var(--bg2);border:1px solid var(--bdr2);border-radius:7px;padding:7px 9px;color:var(--txt);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none">
+          </div>
+          <div style="color:var(--txt3);font-family:'Share Tech Mono',monospace;margin-top:18px">—</div>
+          <div style="flex:1">
+            <div style="color:var(--txt3);font-size:10px;font-family:'Share Tech Mono',monospace;margin-bottom:4px">结束回合</div>
+            <input id="export-to" type="number" min="0" value="${t.turn}" style="width:100%;background:var(--bg2);border:1px solid var(--bdr2);border-radius:7px;padding:7px 9px;color:var(--txt);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none">
+          </div>
+        </div>
+        <div id="export-info" style="color:var(--txt3);font-size:10.5px;font-family:'Share Tech Mono',monospace;margin-bottom:14px;padding:6px 8px;background:var(--bg2);border-radius:6px;border:1px solid var(--bdr)">
+          当前旅程：${t.turn} 回合 · ${t.renderedMessages?.length||0} 条记录
+        </div>
+
+        <div class="sec-t">◈ 导出内容</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+          <label style="display:flex;align-items:center;gap:8px;color:var(--txt2);font-size:12.5px;cursor:pointer"><input type="checkbox" id="exp-narrator" checked style="accent-color:var(--gold)"> 叙事内容（叙事者 + 伊兹）</label>
+          <label style="display:flex;align-items:center;gap:8px;color:var(--txt2);font-size:12.5px;cursor:pointer"><input type="checkbox" id="exp-dialog" checked style="accent-color:var(--gold)"> NPC对话</label>
+          <label style="display:flex;align-items:center;gap:8px;color:var(--txt2);font-size:12.5px;cursor:pointer"><input type="checkbox" id="exp-net" checked style="accent-color:var(--gold)"> BackNet帖子</label>
+          <label style="display:flex;align-items:center;gap:8px;color:var(--txt2);font-size:12.5px;cursor:pointer"><input type="checkbox" id="exp-devour" checked style="accent-color:var(--gold)"> 暴食/升级事件</label>
+          <label style="display:flex;align-items:center;gap:8px;color:var(--txt2);font-size:12.5px;cursor:pointer"><input type="checkbox" id="exp-system" style="accent-color:var(--gold)"> 系统消息</label>
+        </div>
+
+        <button onclick="doExportAdvanced()" style="width:100%;background:linear-gradient(135deg,#c8a76c,#8a6e3a);border:none;border-radius:10px;padding:13px;color:#06060a;font-family:'Noto Sans SC',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+          ↓ 下载 .txt
+        </button>
+
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)">
+          <div class="sec-t" style="margin-bottom:8px">◈ 浏览器存储状态</div>
+          <div id="storage-info" style="background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px">
+            <div style="color:var(--txt3);font-size:11px;font-family:'Share Tech Mono',monospace">正在计算…</div>
+          </div>
+          <button onclick="refreshStorageInfo()" style="width:100%;background:var(--bg3);border:1px solid var(--bdr2);border-radius:7px;padding:7px;color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace;cursor:pointer;margin-top:6px">🔄 刷新存储信息</button>
+          <button onclick="pruneOldMessages()" style="width:100%;background:rgba(255,74,74,0.07);border:1px solid rgba(255,74,74,0.25);border-radius:7px;padding:7px;color:var(--danger);font-size:11px;font-family:'Share Tech Mono',monospace;cursor:pointer;margin-top:5px">🗜 精简历史消息（保留最近60条）</button>
+        </div>
+      </div></div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Auto-init export panel info
+  if (type === "export") {
+    setTimeout(() => { refreshExportInfo(); refreshStorageInfo(); }, 50);
+  }
+
+  // Wire toggles in keys panel
+  if (type === "keys") {
+    let _panelPreset = DS_PRESET;
+    renderModelChips("panel-model-chips","panel-custom-block","panel-ep-url","panel-ep-model", DS_PRESET, (preset)=>{ _panelPreset=preset.id; window._panelPreset=preset.id; });
+    window._panelPreset = DS_PRESET;
+
+    const netT = document.getElementById("panel-net-toggle");
+    if (netT) {
+      netT.addEventListener("touchend", _safeTouchToggle(()=>{ NET_ON=!NET_ON; netT.classList.toggle("on",NET_ON); updateStatusBar(); saveAll(); }), {passive:false});
+      netT.addEventListener("click", ()=>{ NET_ON=!NET_ON; netT.classList.toggle("on",NET_ON); updateStatusBar(); saveAll(); });
+    }
+    const imgT = document.getElementById("panel-img-toggle");
+    if (imgT) {
+      imgT.addEventListener("touchend", _safeTouchToggle(()=>{ IMG_ON=!IMG_ON; imgT.classList.toggle("on",IMG_ON); saveAll(); }), {passive:false});
+      imgT.addEventListener("click", ()=>{ IMG_ON=!IMG_ON; imgT.classList.toggle("on",IMG_ON); saveAll(); });
+    }
+  }
+}
+
+function savePanelKey(type) {
+  if (type === "ds") {
+    const v = document.getElementById("panel-ds-key")?.value.trim();
+    if (v && !v.startsWith("••••")) { API_KEY = v; saveAll(); alert("DeepSeek Key 已更新"); }
+  } else if (type === "tvly") {
+    const v = document.getElementById("panel-tvly-key")?.value.trim();
+    if (v && !v.startsWith("••••")) { TVLY_KEY = v; saveAll(); alert("Tavily Key 已保存"); }
+  } else if (type === "sf") {
+    const v = document.getElementById("panel-sf-key")?.value.trim();
+    if (v !== undefined && !v.startsWith("••••")) { SF_KEY = v; saveAll(); alert(v ? "硅基流动 Key 已保存" : "硅基流动 Key 已清除"); }
+  }
+}
+
+function savePanelModelConfig() {
+  if (typeof window._panelPreset !== "undefined") {
+    const mc = resolveModelConfig(window._panelPreset,"panel-ep-url","panel-ep-model");
+    DS_API = mc.endpoint; DS_MODEL = mc.model; DS_PRESET = mc.presetId;
+    saveAll(); alert("模型配置已保存");
+  }
+}
+
+async function fetchBalance() {
+  const amountEl = document.getElementById("balance-amount");
+  const subEl    = document.getElementById("balance-sub");
+  if (!amountEl) return;
+  amountEl.textContent = "查询中…";
+  subEl.textContent = "";
+  if (!API_KEY || !API_KEY.startsWith("sk-")) {
+    amountEl.textContent = "—"; subEl.textContent = "需要有效的 DeepSeek Key"; return;
+  }
+  if (DS_API !== "https://api.deepseek.com/chat/completions" && DS_PRESET !== "ds-v3" && DS_PRESET !== "ds-r1") {
+    amountEl.textContent = "—"; subEl.textContent = "非 DeepSeek 端点，不支持查询"; return;
+  }
+  try {
+    const res = await fetch(DS_BALANCE_API, { headers: { "Authorization": "Bearer " + API_KEY } });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const balance = data.balance_infos?.find(b => b.currency === "CNY");
+    if (balance) {
+      const avail = parseFloat(balance.available_balance);
+      const total = parseFloat(balance.total_balance);
+      amountEl.textContent = "¥" + (isNaN(avail) ? "—" : avail.toFixed(2));
+      subEl.textContent = "总余额: ¥" + (isNaN(total) ? "—" : total.toFixed(2));
+    } else { amountEl.textContent = "—"; subEl.textContent = "返回数据异常"; }
+  } catch(e) { amountEl.textContent = "—"; subEl.textContent = "查询失败：" + e.message; }
+}
+
+// ─── TOPICS PANEL HELPERS ───────────────────────────────
+function createNewTopicFromPanel() {
+  const name = prompt("请输入新旅程的主角名称：");
+  if (!name || !name.trim()) return;
+  const newT = newTopicState(name.trim());
+  TOPICS.push(newT);
+  saveAll();
+  closePanels();
+  switchTopic(newT.id);
+}
+
+function renameTopic(id) {
+  const tp = getTopic(id);
+  if (!tp) return;
+  const cur = tp.name || "";
+  const newName = prompt("输入新的旅程名称：", cur);
+  if (!newName || !newName.trim()) return;
+  tp.name = newName.trim();
+  saveAll();
+  // refresh the display label in-place if panel still open
+  const el = document.getElementById("tname-disp-"+id);
+  if (el) el.textContent = (tp.charName||tp.player.name) + " — " + tp.name;
+}
+
+function deleteTopicFromPanel(id) {
+  if (!confirm("确认删除这个旅程？此操作不可撤销。")) return;
+  TOPICS = TOPICS.filter(t => t.id !== id);
+  if (ACTIVE_TOPIC_ID === id) {
+    ACTIVE_TOPIC_ID = TOPICS[0]?.id || "";
+    if (ACTIVE_TOPIC_ID) switchTopic(ACTIVE_TOPIC_ID);
+  }
+  saveAll();
+  closePanels();
+  openSlidePanel("topics");
+}
+
+// ─── ADVANCED EXPORT ────────────────────────────────────
+function refreshExportInfo() {
+  const sel = document.getElementById("export-tid");
+  const infoEl = document.getElementById("export-info");
+  if (!sel || !infoEl) return;
+  const tp = getTopic(sel.value);
+  if (!tp) return;
+  const toEl = document.getElementById("export-to");
+  if (toEl) toEl.value = tp.turn;
+  infoEl.textContent = `${tp.charName||tp.player.name} · ${tp.turn} 回合 · ${tp.renderedMessages?.length||0} 条记录 · 最后: ${tp.lastPlayedAt}`;
+}
+
+function doExportAdvanced() {
+  const tidEl   = document.getElementById("export-tid");
+  const fromEl  = document.getElementById("export-from");
+  const toEl    = document.getElementById("export-to");
+  const expNarr = document.getElementById("exp-narrator")?.checked ?? true;
+  const expDlg  = document.getElementById("exp-dialog")?.checked ?? true;
+  const expNet  = document.getElementById("exp-net")?.checked ?? true;
+  const expDev  = document.getElementById("exp-devour")?.checked ?? true;
+  const expSys  = document.getElementById("exp-system")?.checked ?? false;
+
+  const tid  = tidEl?.value || ACTIVE_TOPIC_ID;
+  const tp   = getTopic(tid);
+  if (!tp) { alert("找不到旅程数据"); return; }
+
+  const fromTurn = parseInt(fromEl?.value ?? 0) || 0;
+  const toTurn   = parseInt(toEl?.value   ?? tp.turn) || tp.turn;
+
+  // We track turn via progressLog length as a proxy — renderedMessages don't have turn stamps
+  // so we do a best-effort slice: estimate messages per turn ratio
+  const msgs = tp.renderedMessages || [];
+  const totalTurns = tp.turn || 1;
+  const msgsPerTurn = msgs.length / totalTurns;
+  const startIdx = Math.max(0, Math.floor(fromTurn * msgsPerTurn));
+  const endIdx   = Math.min(msgs.length, Math.ceil(toTurn * msgsPerTurn));
+  const slice    = msgs.slice(startIdx, endIdx);
+
+  const lines = [
+    `后室文字冒险 · ${tp.charName||tp.player.name} 的旅程`,
+    `导出时间：${new Date().toLocaleString("zh-CN")}`,
+    `旅程名：${tp.name}`,
+    `导出范围：回合 ${fromTurn} — ${toTurn}（共 ${slice.length} 条记录）`,
+    "═".repeat(50), ""
+  ];
+
+  slice.forEach(m => {
+    if (!m) return;
+    let prefix = "", content = "";
+    switch(m.type) {
+      case "narrator": if (!expNarr) return; prefix="【叙事者】"; content=m.content||""; break;
+      case "iz":       if (!expNarr) return; prefix="【伊兹】";   content=m.content||""; break;
+      case "dialog":   if (!expDlg)  return; prefix=`【${m.speaker||"NPC"}】`; content=`"${m.content||""}"`; break;
+      case "net":      if (!expNet)  return; prefix="【BackNet】"; content=(m.posts||[]).map(p=>`@${p.user}：${p.content}${(p.replies||[]).map(r=>"\n  └ @"+r.user+"："+r.content).join("")}`).join("\n"); break;
+      case "devour":   if (!expDev)  return; prefix="【暴食系统】"; content=`目标：${m.target||""}\n${m.description||""}\n获得：${m.gained||""}`; break;
+      case "system":   if (!expSys)  return; prefix="【系统】"; content=m.content||""; break;
+      case "levelup":  if (!expDev)  return; prefix="【升级】"; content=m.content||""; break;
+      default: return;
+    }
+    if (content.trim()) lines.push(prefix + "\n" + content + "\n");
+  });
+
+  // Append progress log for the range as reference
+  if (tp.progressLog?.length) {
+    lines.push("═".repeat(50));
+    lines.push("【进展日志摘要】");
+    const logSlice = tp.progressLog.slice(Math.max(0,fromTurn-1), toTurn);
+    logSlice.forEach((e,i) => lines.push(`T${fromTurn+i}：${e}`));
+  }
+
+  const blob = new Blob([lines.join("\n")], { type:"text/plain;charset=utf-8" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const safeName = `${tp.charName||"主角"}_T${fromTurn}-${toTurn}_${tp.name}`.replace(/[/\\?%*:|"<>]/g,"_");
+  a.href = url; a.download = `后室_${safeName}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Keep backward-compat alias
+function doExport() { doExportAdvanced(); }
+
+// ─── STORAGE MONITOR ────────────────────────────────────
+function refreshStorageInfo() {
+  const el = document.getElementById("storage-info");
+  if (!el) return;
+
+  // Calculate raw localStorage usage
+  let totalBytes = 0;
+  let gameBytes  = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      const v = localStorage.getItem(k) || "";
+      const bytes = (k.length + v.length) * 2; // UTF-16 approx
+      totalBytes += bytes;
+      if (k === STORAGE_KEY) gameBytes = bytes;
+    }
+  } catch(e) {}
+
+  const fmt = b => b > 1048576 ? (b/1048576).toFixed(2)+" MB" : b > 1024 ? (b/1024).toFixed(1)+" KB" : b+" B";
+  // Most browsers allow ~5-10 MB localStorage
+  const quota = 5 * 1024 * 1024; // conservative 5 MB estimate
+  const pct   = Math.min(100, Math.round(totalBytes / quota * 100));
+  const gameTopics = TOPICS.map(tp => {
+    const raw = JSON.stringify(tp);
+    const b   = raw.length * 2;
+    return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--bdr)">
+      <span style="color:var(--txt2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(tp.charName||tp.player.name)} — ${esc(tp.name)}</span>
+      <span style="color:${b>500000?'var(--danger)':b>200000?'var(--orange)':'var(--txt3)'};font-family:'Share Tech Mono',monospace;font-size:10px;flex-shrink:0;margin-left:8px">${fmt(b)}</span>
+    </div>`;
+  }).join("");
+
+  const barColor = pct > 85 ? "var(--danger)" : pct > 60 ? "var(--orange)" : "var(--green)";
+  el.innerHTML = `
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:var(--txt2);font-size:11px;font-family:'Share Tech Mono',monospace">localStorage 使用率</span>
+        <span style="color:${barColor};font-family:'Share Tech Mono',monospace;font-size:11px">${pct}% · ${fmt(totalBytes)} / ~5MB</span>
+      </div>
+      <div style="height:6px;background:var(--bg0);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.4s"></div>
+      </div>
+      ${pct > 80 ? `<div style="color:var(--danger);font-size:10.5px;margin-top:5px;font-family:'Share Tech Mono',monospace">⚠ 存储接近上限，建议导出后精简历史消息</div>` : ''}
+    </div>
+    <div style="color:var(--txt3);font-size:10px;font-family:'Share Tech Mono',monospace;margin-bottom:5px">游戏数据占用：${fmt(gameBytes)}</div>
+    <div style="color:var(--txt3);font-size:10px;font-family:'Share Tech Mono',monospace;margin-bottom:5px">各旅程占用：</div>
+    ${gameTopics}
+    <div style="margin-top:6px;color:var(--txt3);font-size:10px;font-family:'Share Tech Mono',monospace;line-height:1.7">
+      对话历史是最大占用来源。可用「精简历史」保留最近60条渲染记录并压缩AI对话上下文。
+    </div>`;
+}
+
+function pruneOldMessages() {
+  if (!confirm("将当前所有旅程的渲染消息精简为最近 60 条，并压缩AI对话上下文至最近 20 轮。继续？")) return;
+  TOPICS.forEach(tp => {
+    if (tp.renderedMessages && tp.renderedMessages.length > 60)
+      tp.renderedMessages = tp.renderedMessages.slice(-60);
+    if (tp.convoHistory && tp.convoHistory.length > 40)
+      tp.convoHistory = tp.convoHistory.slice(-40);
+  });
+  saveAll();
+  refreshStorageInfo();
+  alert("精简完成。");
+}
+
+function sendQuickAction(text) {
+  closePanels();
+  if (!text || processing) return;
+  setTimeout(() => processAction(text), 100);
+}
+
+function togglePinQA(id) {
+  const t = getActive();
+  const q = t.quickActions.find(q => q.id === id);
+  if (q) { q.pinned = !q.pinned; saveAll(); closePanels(); openSlidePanel("quickactions"); }
+}
+
+function deleteQA(id) {
+  const t = getActive();
+  t.quickActions = t.quickActions.filter(q => q.id !== id);
+  saveAll();
+  const el = document.getElementById("qa-"+id);
+  if (el) el.remove();
+}
+
+function addQA() {
+  const inp = document.getElementById("qa-add-input");
+  const text = inp?.value.trim();
+  if (!text) return;
+  const t = getActive();
+  if (!t.quickActions.find(q => q.text === text)) {
+    t.quickActions.push({ id:Date.now().toString(), text, pinned:false, freq:1 });
+    saveAll();
+    closePanels();
+    openSlidePanel("quickactions");
+  }
+}
+
+function closePanels() { document.getElementById("panel-container").innerHTML = ""; }
+
+// ════════════════════════════════════════════════════════
+//  MODALS
+// ════════════════════════════════════════════════════════
+function openModal(type) {
+  const container = document.getElementById("modal-container");
+  let html = "";
+
+  if (type === "topics") {
+    // Redirect to slide panel
+    openSlidePanel("topics"); return;
+  }
+  else if (type === "settings") {
+    const s = SETTINGS;
+    html = `<div class="modal-bg" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header"><div class="modal-title">⚙️ 游戏设定</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+      <div class="modal-body">
+        <div class="sec-t">◈ 难度调节</div>
+        <div class="setting-row">
+          <div><div class="setting-label">危险程度</div><div class="setting-desc">影响遭遇威胁的频率</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" class="slider" id="slider-danger" min="0" max="100" value="${s.dangerLevel}">
+            <span class="setting-val" id="val-danger">${s.dangerLevel}</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-label">NPC复杂度</div><div class="setting-desc">影响人物动机的深度</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" class="slider" id="slider-npc" min="0" max="100" value="${s.npcComplexity}">
+            <span class="setting-val" id="val-npc">${s.npcComplexity}</span>
+          </div>
+        </div>
+        <div class="sec-t" style="margin-top:14px">◈ 叙事设定</div>
+        <div class="setting-row">
+          <div><div class="setting-label">叙事长度</div></div>
+          <select class="select-input" id="set-len">
+            <option value="long"   ${s.narrativeLength==="long"  ?"selected":""}>详细（慢）</option>
+            <option value="medium" ${s.narrativeLength==="medium"?"selected":""}>中等</option>
+            <option value="short"  ${s.narrativeLength==="short" ?"selected":""}>简洁（快）</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-label">伊兹性格</div></div>
+          <select class="select-input" id="set-iz">
+            <option value="warm"       ${s.izPersonality==="warm"      ?"selected":""}>温柔体贴</option>
+            <option value="cool"       ${s.izPersonality==="cool"      ?"selected":""}>冷静理性</option>
+            <option value="playful"    ${s.izPersonality==="playful"   ?"selected":""}>俏皮活泼</option>
+            <option value="mysterious" ${s.izPersonality==="mysterious"?"selected":""}>神秘莫测</option>
+          </select>
+        </div>
+        <div class="sec-t" style="margin-top:14px">✏️ 自定义系统提示追加</div>
+        <textarea class="prompt-textarea" id="custom-prompt" placeholder="例如：后室中存在一个神秘组织正在追踪暴食系统的出现…">${esc(s.customPromptAppend)}</textarea>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr)">
+          <button class="modal-btn danger-btn" onclick="resetCurrentTopic()">重置当前旅程</button>
+          &nbsp;
+          <button class="modal-btn secondary" onclick="closeModal();setTimeout(()=>openSlidePanel('topics'),80)">话题管理</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="btn-row">
+          <button class="modal-btn secondary" onclick="closeModal()">取消</button>
+          <button class="modal-btn primary" onclick="saveSettings()">保存设定</button>
+        </div>
+      </div>
+    </div></div>`;
+  }
+
+  container.innerHTML = html;
+
+  if (type === "settings") {
+    const dangerSlider = document.getElementById("slider-danger");
+    const npcSlider    = document.getElementById("slider-npc");
+    if (dangerSlider) dangerSlider.addEventListener("input", function(){ SETTINGS.dangerLevel=parseInt(this.value); document.getElementById("val-danger").textContent=this.value; });
+    if (npcSlider)    npcSlider.addEventListener("input",    function(){ SETTINGS.npcComplexity=parseInt(this.value); document.getElementById("val-npc").textContent=this.value; });
+    const lenSelect = document.getElementById("set-len");
+    const izSelect  = document.getElementById("set-iz");
+    if (lenSelect) lenSelect.addEventListener("change", function(){ SETTINGS.narrativeLength=this.value; });
+    if (izSelect)  izSelect.addEventListener("change",  function(){ SETTINGS.izPersonality=this.value; });
+  }
+}
+
+function closeModal() { document.getElementById("modal-container").innerHTML = ""; }
+
+function saveSettings() {
+  SETTINGS.customPromptAppend = document.getElementById("custom-prompt")?.value || "";
+  saveAll(); closeModal();
+}
+
+function switchTopicAndClose(id) { closeModal(); switchTopic(id); }
+
+function createNewTopic() {
+  const name = prompt("请输入新旅程的主角名称：");
+  if (!name || !name.trim()) return;
+  const newT = newTopicState(name.trim());
+  TOPICS.push(newT);
+  closeModal();
+  switchTopic(newT.id);
+}
+
+function deleteTopic(id) {
+  if (!confirm("确认删除这个旅程？")) return;
+  TOPICS = TOPICS.filter(t => t.id !== id);
+  if (ACTIVE_TOPIC_ID === id) { ACTIVE_TOPIC_ID = TOPICS[0].id; switchTopic(ACTIVE_TOPIC_ID); }
+  saveAll(); openModal("topics");
+}
+
+function resetCurrentTopic() {
+  if (!confirm("确认重置当前旅程？进度清空。")) return;
+  const idx = TOPICS.findIndex(t => t.id === ACTIVE_TOPIC_ID);
+  if (idx !== -1) {
+    const fresh = newTopicState(TOPICS[idx].charName || TOPICS[idx].player.name);
+    fresh.id = ACTIVE_TOPIC_ID;
+    TOPICS[idx] = fresh;
+  }
+  closeModal(); switchTopic(ACTIVE_TOPIC_ID);
+}
+
+// ════════════════════════════════════════════════════════
+//  MODEL CHIPS
+// ════════════════════════════════════════════════════════
+function renderModelChips(containerId, customBlockId, urlInputId, modelInputId, activePreset, onSelect) {
+  const container   = document.getElementById(containerId);
+  const customBlock = document.getElementById(customBlockId);
+  const urlInput    = document.getElementById(urlInputId);
+  const modelInput  = document.getElementById(modelInputId);
+  if (!container) return;
+  container.innerHTML = "";
+  MODEL_PRESETS.forEach(preset => {
+    const chip = document.createElement("div");
+    chip.className = "model-chip" + (preset.id === activePreset ? " active-chip" : "");
+    chip.textContent = preset.label;
+    const doSelect = () => selectChip(preset);
+    chip.addEventListener("touchend", _safeTouchToggle(doSelect), {passive:false});
+    chip.addEventListener("click", doSelect);
+    container.appendChild(chip);
+  });
+  if (activePreset === "custom" && urlInput && modelInput) {
+    if (!urlInput.value)   urlInput.value   = DS_API   || "";
+    if (!modelInput.value) modelInput.value = DS_MODEL || "";
+    if (customBlock) customBlock.classList.add("open");
+  }
+  function selectChip(preset) {
+    container.querySelectorAll(".model-chip").forEach(c => c.classList.remove("active-chip"));
+    const clicked = [...container.querySelectorAll(".model-chip")].find(c => c.textContent === preset.label);
+    if (clicked) clicked.classList.add("active-chip");
+    if (customBlock) {
+      if (preset.id === "custom") {
+        customBlock.classList.add("open");
+      } else {
+        customBlock.classList.remove("open");
+        if (urlInput)   urlInput.value   = preset.endpoint;
+        if (modelInput) modelInput.value = preset.model;
+      }
+    }
+    if (onSelect) onSelect(preset);
+  }
+}
+
+function resolveModelConfig(presetId, urlInputId, modelInputId) {
+  if (presetId === "custom") {
+    const url   = (document.getElementById(urlInputId)?.value||"").trim();
+    const model = (document.getElementById(modelInputId)?.value||"").trim();
+    return { endpoint: url||"https://api.deepseek.com/chat/completions", model: model||"deepseek-chat", presetId:"custom" };
+  }
+  const preset = MODEL_PRESETS.find(p=>p.id===presetId)||MODEL_PRESETS[0];
+  return { endpoint:preset.endpoint, model:preset.model, presetId:preset.id };
+}
+
+// ════════════════════════════════════════════════════════
+//  IZ PERSONA MODAL
+// ════════════════════════════════════════════════════════
+const IZ_PERSONA_WARN = 2000, IZ_PERSONA_LIMIT = 4000;
+
+function openIzPersonaModal() {
+  closeIzPersonaModal();
+  const modal = document.createElement("div");
+  modal.className = "iz-persona-modal-bg"; modal.id = "iz-persona-modal-bg";
+  modal.addEventListener("click", (e)=>{ if(e.target===modal) closeIzPersonaModal(); });
+  const charLen = IZ_PERSONA.length;
+  const countClass = charLen>=IZ_PERSONA_LIMIT?"danger":charLen>=IZ_PERSONA_WARN?"warn":"";
+  modal.innerHTML = `<div class="iz-persona-modal">
+    <div class="iz-persona-header">
+      <div class="iz-persona-av">伊</div>
+      <div class="iz-persona-title"><div class="t1">伊兹 · 专属人格设定</div><div class="t2">此内容以最高优先级注入系统提示顶部</div></div>
+      <button class="iz-persona-close" onclick="closeIzPersonaModal()">✕</button>
+    </div>
+    <div class="iz-persona-body">
+      <div class="iz-persona-desc">在这里写下伊兹始终遵守的设定——背景故事、说话方式、对主角的特殊情感、禁忌话题等。会在整个游戏过程中持续生效。</div>
+      <textarea class="iz-persona-textarea" id="iz-persona-ta" oninput="updateIzCharCount(this)" maxlength="8000" placeholder="例如：伊兹实际上是一个被困在后室数据层的残缺AI，她失去了关于自己起源的大部分记忆……">${esc(IZ_PERSONA)}</textarea>
+      <div class="iz-persona-charcount ${countClass}" id="iz-char-count">${charLen} 字符</div>
+    </div>
+    <div class="iz-persona-footer">
+      <button class="iz-persona-clear" onclick="clearIzPersona()">清除设定</button>
+      <button class="iz-persona-cancel" onclick="closeIzPersonaModal()">取消</button>
+      <button class="iz-persona-save" onclick="saveIzPersona()">确认并永久生效</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  const ta = document.getElementById("iz-persona-ta");
+  if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); }
+}
+
+function closeIzPersonaModal() { const m=document.getElementById("iz-persona-modal-bg"); if(m) m.remove(); }
+
+function updateIzCharCount(ta) {
+  const counter = document.getElementById("iz-char-count");
+  if (!counter) return;
+  const n = ta.value.length;
+  counter.className = "iz-persona-charcount "+(n>=IZ_PERSONA_LIMIT?"danger":n>=IZ_PERSONA_WARN?"warn":"");
+  counter.textContent = n+" 字符"+(n>=IZ_PERSONA_LIMIT?" · 较长，会消耗更多 token":n>=IZ_PERSONA_WARN?" · 建议适当精简":"");
+}
+
+function saveIzPersona() {
+  const ta = document.getElementById("iz-persona-ta");
+  if (!ta) return;
+  IZ_PERSONA = ta.value; saveAll(); closeIzPersonaModal();
+  addMsgToFeed({ type:"system", content: IZ_PERSONA.trim() ? `伊兹人格设定已保存（${IZ_PERSONA.length} 字符），将在下次对话生效` : "伊兹人格设定已清除，恢复默认" }, false);
+}
+
+function clearIzPersona() {
+  const ta = document.getElementById("iz-persona-ta");
+  if (ta) { ta.value=""; updateIzCharCount(ta); }
+}
+
+// ════════════════════════════════════════════════════════
+//  DEVOUR PERSONA MODAL
+// ════════════════════════════════════════════════════════
+const DV_PERSONA_WARN = 2000, DV_PERSONA_LIMIT = 5000;
+
+function openDevourPersonaModal() {
+  closeDevourPersonaModal();
+  const modal = document.createElement("div");
+  modal.className = "dv-persona-modal-bg"; modal.id = "dv-persona-modal-bg";
+  modal.addEventListener("click", (e)=>{ if(e.target===modal) closeDevourPersonaModal(); });
+  const charLen = DEVOUR_PERSONA.length;
+  const countClass = charLen>=DV_PERSONA_LIMIT?"danger":charLen>=DV_PERSONA_WARN?"warn":"";
+  modal.innerHTML = `<div class="dv-persona-modal">
+    <div class="dv-persona-header">
+      <div class="dv-persona-av">⚡</div>
+      <div class="dv-persona-title"><div class="t1">主角异能系统 · 设定编辑器</div><div class="t2">替换或清空「暴食系统」区块，下次对话生效</div></div>
+      <button class="dv-persona-close" onclick="closeDevourPersonaModal()">✕</button>
+    </div>
+    <div class="dv-persona-body">
+      <div class="dv-persona-desc">定义主角的异能规则。可改名（如「共鸣系统」）、完全重写逻辑、或清空让主角成为普通探险者。</div>
+      <textarea class="dv-persona-textarea" id="dv-persona-ta" oninput="updateDvCharCount(this)" maxlength="10000">${esc(DEVOUR_PERSONA)}</textarea>
+      <div class="dv-persona-charcount ${countClass}" id="dv-char-count">${charLen} 字符</div>
+    </div>
+    <div class="dv-persona-footer">
+      <button class="dv-persona-reset" onclick="resetDvPersona()">恢复默认暴食系统</button>
+      <button class="dv-persona-cancel" onclick="closeDevourPersonaModal()">取消</button>
+      <button class="dv-persona-save" onclick="saveDvPersona()">保存并生效</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  const ta = document.getElementById("dv-persona-ta");
+  if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); }
+}
+
+function closeDevourPersonaModal() { const m=document.getElementById("dv-persona-modal-bg"); if(m) m.remove(); }
+
+function updateDvCharCount(ta) {
+  const counter = document.getElementById("dv-char-count");
+  if (!counter) return;
+  const n = ta.value.length;
+  counter.className = "dv-persona-charcount "+(n>=DV_PERSONA_LIMIT?"danger":n>=DV_PERSONA_WARN?"warn":"");
+  counter.textContent = n+" 字符"+(n>=DV_PERSONA_LIMIT?" · 较长，会显著增加 token 消耗":n>=DV_PERSONA_WARN?" · 建议精简":n===0?" · 将以普通探险者模式运行":"");
+}
+
+function saveDvPersona() {
+  const ta = document.getElementById("dv-persona-ta");
+  if (!ta) return;
+  DEVOUR_PERSONA = ta.value; saveAll(); closeDevourPersonaModal();
+  addMsgToFeed({ type:"system", content: !DEVOUR_PERSONA.trim() ? "主角异能系统已清除，将以普通探险者身份继续（下次对话生效）" : `主角异能设定已更新（${DEVOUR_PERSONA.length} 字符），下次对话生效` }, false);
+}
+
+function resetDvPersona() {
+  const ta = document.getElementById("dv-persona-ta");
+  if (!ta || !confirm("确认恢复默认的「暴食系统」描述？")) return;
+  ta.value = DEFAULT_DEVOUR_PERSONA; updateDvCharCount(ta);
+}
+
+// ════════════════════════════════════════════════════════
+//  SCROLL
+// ════════════════════════════════════════════════════════
+function scrollFeed(dir) {
+  const feed = document.getElementById("feed");
+  if (dir==="top") feed.scrollTo({top:0,behavior:"smooth"});
+  else feed.scrollTo({top:feed.scrollHeight,behavior:"smooth"});
+}
+
+function updateScrollBtns() {
+  const feed = document.getElementById("feed");
+  if (!feed) return;
+  const atTop = feed.scrollTop < 60;
+  const atBot = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 60;
+  document.getElementById("scroll-top-btn")?.classList.toggle("visible", !atTop);
+  document.getElementById("scroll-bot-btn")?.classList.toggle("visible", !atBot);
+}
+
+// ════════════════════════════════════════════════════════
+//  SEARCH
+// ════════════════════════════════════════════════════════
+let _searchMatches=[], _searchIdx=-1;
+
+function toggleSearch() {
+  const bar = document.getElementById("search-bar");
+  if (bar.style.display==="none"||!bar.style.display) { bar.style.display="flex"; document.getElementById("search-input").focus(); }
+  else closeSearch();
+}
+function closeSearch() {
+  document.getElementById("search-bar").style.display="none";
+  document.getElementById("search-input").value="";
+  clearSearchHighlights(); _searchMatches=[]; _searchIdx=-1;
+  document.getElementById("search-count").textContent="0/0";
+}
+function clearSearchHighlights() {
+  document.querySelectorAll("#feed mark.sh").forEach(mark => {
+    const p = mark.parentNode; p.replaceChild(document.createTextNode(mark.textContent),mark); p.normalize();
+  });
+}
+function doSearch(query) {
+  clearSearchHighlights(); _searchMatches=[]; _searchIdx=-1;
+  if (!query||query.length<1) { document.getElementById("search-count").textContent="0/0"; return; }
+  const feed = document.getElementById("feed");
+  const walker = document.createTreeWalker(feed,NodeFilter.SHOW_TEXT,{
+    acceptNode(node){ const p=node.parentElement; if(!p) return NodeFilter.FILTER_REJECT; if(p.closest(".msg-action-bar,.quote-preview")) return NodeFilter.FILTER_REJECT; return NodeFilter.FILTER_ACCEPT; }
+  });
+  const textNodes=[]; let n;
+  while((n=walker.nextNode())) textNodes.push(n);
+  const lq=query.toLowerCase();
+  textNodes.forEach(node=>{
+    const text=node.nodeValue, lower=text.toLowerCase();
+    let idx=0, found=false;
+    const frag=document.createDocumentFragment();
+    while(true){
+      const pos=lower.indexOf(lq,idx);
+      if(pos===-1){frag.appendChild(document.createTextNode(text.slice(idx)));break;}
+      if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+      const mark=document.createElement("mark"); mark.className="sh"; mark.textContent=text.slice(pos,pos+query.length);
+      frag.appendChild(mark); _searchMatches.push(mark); found=true; idx=pos+query.length;
+    }
+    if(found) node.parentNode.replaceChild(frag,node);
+  });
+  document.getElementById("search-count").textContent=_searchMatches.length>0?"1/"+_searchMatches.length:"0/0";
+  if(_searchMatches.length>0){_searchIdx=0;highlightSearchMatch(0);}
+}
+function highlightSearchMatch(idx){
+  _searchMatches.forEach((m,i)=>m.classList.toggle("active-sh",i===idx));
+  if(_searchMatches[idx]){_searchMatches[idx].scrollIntoView({behavior:"smooth",block:"center"}); document.getElementById("search-count").textContent=(idx+1)+"/"+_searchMatches.length;}
+}
+function searchNav(dir){
+  if(!_searchMatches.length) return;
+  _searchIdx=(_searchIdx+dir+_searchMatches.length)%_searchMatches.length;
+  highlightSearchMatch(_searchIdx);
+}
+
+// ════════════════════════════════════════════════════════
+//  OPTIONS DRAWER
+// ════════════════════════════════════════════════════════
+let _optsData=[], _optsSelected=new Set(), _optsExpanded=new Set();
+
+function toggleOptsDrawer() { document.getElementById("opts-drawer").classList.toggle("collapsed"); }
+function renderOptions(opts) { _optsData=opts||[]; _optsSelected.clear(); _optsExpanded.clear(); _renderOptsDrawer(); }
+
+function _renderOptsDrawer() {
+  const drawer=document.getElementById("opts-drawer"),body=document.getElementById("opts-drawer-body"),badge=document.getElementById("opts-badge"),footer=document.getElementById("opts-drawer-footer"),sendBtn=document.getElementById("opts-send-btn");
+  if(!_optsData.length){drawer.classList.add("collapsed");body.innerHTML="";badge.textContent="0 项";badge.classList.remove("has-sel");footer.style.display="none";return;}
+  drawer.classList.remove("collapsed"); badge.textContent=_optsData.length+" 项"; badge.classList.toggle("has-sel",_optsSelected.size>0); body.innerHTML="";
+  _optsData.forEach(o=>{
+    const isSelected=_optsSelected.has(o.id), isExpanded=_optsExpanded.has(o.id);
+    const typeClass=o.type==="special"?"special":o.type==="danger"?"danger":o.type==="iz"?"iz-type":"";
+    const item=document.createElement("div"); item.className=`opt-item ${typeClass} ${isSelected?"selected":""}`;
+    item.innerHTML=`<div class="opt-item-header"><span class="opt-item-num">${o.id}</span><span class="opt-item-text">${esc(o.text)}</span><div class="opt-item-actions"><button class="opt-expand-btn">${isExpanded?"收起▲":"详情▼"}</button><div class="opt-checkbox"></div></div></div><div class="opt-item-detail ${isExpanded?"open":""}">${esc(o.text)}<div style="color:var(--txt3);font-size:11px;margin-top:6px;font-family:'Share Tech Mono',monospace">类型: ${o.type||"normal"}</div></div>`;
+    item.querySelector(".opt-item-text").addEventListener("click",(e)=>{e.stopPropagation();if(!processing)processAction("[选项"+o.id+"] "+o.text);});
+    item.querySelector(".opt-item-num").addEventListener("click",(e)=>{e.stopPropagation();if(!processing)processAction("[选项"+o.id+"] "+o.text);});
+    item.querySelector(".opt-expand-btn").addEventListener("click",(e)=>{e.stopPropagation();if(_optsExpanded.has(o.id))_optsExpanded.delete(o.id);else _optsExpanded.add(o.id);_renderOptsDrawer();});
+    item.querySelector(".opt-checkbox").addEventListener("click",(e)=>{e.stopPropagation();if(_optsSelected.has(o.id))_optsSelected.delete(o.id);else _optsSelected.add(o.id);_renderOptsDrawer();});
+    body.appendChild(item);
+  });
+  if(_optsSelected.size>0){footer.style.display="flex";sendBtn.textContent="发送所选 "+_optsSelected.size+" 个行动";badge.textContent=_optsData.length+" 项（已选 "+_optsSelected.size+"）";badge.classList.add("has-sel");}
+  else footer.style.display="none";
+}
+
+function clearOptSelection(){_optsSelected.clear();_renderOptsDrawer();}
+function sendSelectedOpts(){
+  if(!_optsSelected.size||processing)return;
+  const selected=_optsData.filter(o=>_optsSelected.has(o.id));
+  const combined=selected.map(o=>`[选项${o.id}] ${o.text}`).join("\n");
+  _optsSelected.clear(); processAction(combined);
+}
+
+// ════════════════════════════════════════════════════════
+//  SETUP — model chips
+// ════════════════════════════════════════════════════════
+let _setupPreset = MODEL_PRESETS[0].id;
+
+function initSetupChips() {
+  _setupPreset = DS_PRESET;
+  renderModelChips("setup-model-chips","setup-custom-block","setup-ep-url","setup-ep-model", _setupPreset, (preset)=>{ _setupPreset=preset.id; });
+}
+
+// ════════════════════════════════════════════════════════
+//  GAME START
+// ════════════════════════════════════════════════════════
+function startGame() {
+  const charName = document.getElementById("char-name-input").value.trim();
+  const dsKey    = document.getElementById("ds-key-input").value.trim();
+  if (!charName || !dsKey || !dsKey.startsWith("sk-")) {
+    document.getElementById("setup-warn").style.display = "block";
+    return;
+  }
+  API_KEY = dsKey;
+  const mc = resolveModelConfig(_setupPreset,"setup-ep-url","setup-ep-model");
+  DS_API = mc.endpoint; DS_MODEL = mc.model; DS_PRESET = mc.presetId;
+
+  const firstTopic = newTopicState(charName);
+  TOPICS = [firstTopic];
+  ACTIVE_TOPIC_ID = firstTopic.id;
+  saveAll();
+  _gameStartedByButton = true;
+
+  document.getElementById("setup-screen").style.display = "none";
+  const ls = document.getElementById("loading-screen");
+  ls.style.display = "flex";
+
+  const loadMsgs = [
+    "正在初始化伊兹神经接入系统…",
+    "加载后室层级数据库…",
+    "校准暴食系统核心参数…",
+    "同步"+charName+"生命体征…",
+    "构建 BackNet 信号矩阵…",
+    "一切就绪，正在进入后室…",
+  ];
+  let i=0;
+  const lmsg = document.getElementById("ld-msg");
+  const timer = setInterval(()=>{
+    i++;
+    if(i<loadMsgs.length) { lmsg.textContent=loadMsgs[i]; }
+    else {
+      clearInterval(timer);
+      setTimeout(()=>{
+        ls.style.display="none";
+        const gs = document.getElementById("game-screen");
+        gs.style.display="flex";
+        updateStatusBar();
+        showOnboardingTip();
+        triggerOpeningScene(getActive());
+      }, 400);
+    }
+  }, 620);
+}
+
+function showOnboardingTip() {
+  const tip = document.createElement("div");
+  tip.className = "onboard-tip"; tip.id = "onboard-tip";
+  tip.innerHTML = `<div class="onboard-tip-text">💡 点击右下角 <b>⋯更多</b> 可配置<br>密钥、查看NPC、日志、BackNet等功能</div>
+    <button class="onboard-tip-close" onclick="this.closest('#onboard-tip').remove()">我知道了</button>`;
+  document.body.appendChild(tip);
+  setTimeout(()=>{ const t=document.getElementById("onboard-tip"); if(t) t.remove(); }, 8000);
+}
+
+// ════════════════════════════════════════════════════════
+//  DOMContentLoaded
+// ════════════════════════════════════════════════════════
+window.addEventListener("DOMContentLoaded", ()=>{
+
+  // Init net icon
+  const ni = document.getElementById("net-icon");
+  if (ni) ni.innerHTML = netIconSVG(NET_ON);
+
+  document.getElementById("cinput").addEventListener("keydown", e=>{
+    if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();handleSend();}
+  });
+
+  const setupScreen = document.getElementById("setup-screen");
+  if (setupScreen) {
+    setupScreen.addEventListener("focusin",(e)=>{
+      if(e.target.matches("input,textarea")) setTimeout(()=>e.target.scrollIntoView({behavior:"smooth",block:"center"}),350);
+    });
+    if(window.visualViewport){
+      window.visualViewport.addEventListener("resize",()=>{
+        const active=document.activeElement;
+        if(active&&active.matches("input,textarea")&&setupScreen.contains(active)&&setupScreen.style.display!=="none")
+          setTimeout(()=>active.scrollIntoView({behavior:"smooth",block:"center"}),80);
+      });
+    }
+  }
+
+  initSetupChips();
+
+  const feed = document.getElementById("feed");
+  if (feed) feed.addEventListener("scroll", updateScrollBtns, {passive:true});
+
+  const si = document.getElementById("search-input");
+  if (si) {
+    si.addEventListener("input",()=>doSearch(si.value.trim()));
+    si.addEventListener("keydown",e=>{
+      if(e.key==="Enter") searchNav(e.shiftKey?-1:1);
+      if(e.key==="Escape") closeSearch();
+    });
+  }
+
+  if (_gameStartedByButton) return;
+
+  const hasSave = loadAll();
+  initSetupChips();
+
+  // Re-init net icon after loadAll (which may change NET_ON)
+  if (ni) ni.innerHTML = netIconSVG(NET_ON);
+
+  if (hasSave && API_KEY && TOPICS.length) {
+    document.getElementById("setup-screen").style.display = "none";
+    document.getElementById("game-screen").style.display  = "flex";
+    updateStatusBar();
+    const t = getActive();
+    if (!t) return;
+    (t.renderedMessages||[]).forEach(m=>{ const el=renderMsgObj(m); if(el) feed.appendChild(el); });
+    feed.scrollTop = feed.scrollHeight;
+    if (!t.convoHistory.length) {
+      triggerOpeningScene(t);
+    } else {
+      renderOptions([
+        {id:1,text:"继续上次的行动",type:"normal"},
+        {id:2,text:"【问伊兹】快速汇报当前状态与周边情况",type:"iz"},
+        {id:3,text:"查看背包物资",type:"normal"},
+        {id:4,text:"环顾四周，仔细观察当前环境",type:"normal"},
+      ]);
+    }
+  } else {
+    if (API_KEY) document.getElementById("ds-key-input").value = API_KEY;
+    initSetupChips();
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").then(reg=>{
+      console.log("[PWA] SW registered, scope:", reg.scope);
+    }).catch(err=>console.warn("[PWA] SW failed:", err));
+  }
+});
+</script>
+</body>
+</html>

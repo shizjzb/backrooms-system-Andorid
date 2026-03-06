@@ -160,8 +160,31 @@ body{font-family:'Noto Sans SC',sans-serif;font-size:15px;color:var(--txt)}
 .opt-item.selected .opt-checkbox::after{opacity:1}
 .opt-expand-btn{background:none;border:none;color:var(--txt3);font-size:11px;font-family:'Share Tech Mono',monospace;cursor:pointer;padding:2px 4px;transition:color 0.15s;flex-shrink:0}
 .opt-expand-btn:active{color:var(--gold)}
-.opt-item-detail{display:none;padding:0 12px 10px 40px;color:var(--txt2);font-size:12.5px;line-height:1.8;border-top:1px solid var(--bdr)}
+.opt-item-detail{display:none;padding:0 12px 12px 12px;border-top:1px solid var(--bdr)}
+
 .opt-item-detail.open{display:block}
+
+/* ★ hint走向预测 */
+
+.opt-hint-wrap{padding-top:9px}
+
+.opt-hint-label{color:var(--txt3);font-size:9.5px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px;margin-bottom:6px}
+
+.opt-hint-rows{display:flex;flex-direction:column;gap:5px}
+
+.opt-hint-row{display:flex;align-items:flex-start;gap:7px;padding:5px 9px;border-radius:6px;animation:fsi 0.22s ease both}
+
+.opt-hint-idx{font-family:'Share Tech Mono',monospace;font-size:9.5px;flex-shrink:0;margin-top:1.5px;font-weight:700;min-width:14px}
+
+.opt-hint-text{font-size:12px;line-height:1.65;color:var(--txt2)}
+
+.opt-hint-empty{color:var(--txt3);font-size:11px;font-family:'Share Tech Mono',monospace;padding:8px 0;font-style:italic}
+
+```
+
+
+
+---
 .opts-drawer-footer{padding:7px 11px;border-top:1px solid var(--bdr);display:flex;gap:8px;align-items:center;flex-shrink:0}
 .opts-send-btn{flex:1;background:linear-gradient(135deg,#c8a76c,#9a7438);border:none;border-radius:8px;padding:8px 14px;color:#06060a;font-family:'Noto Sans SC',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:transform 0.15s,opacity 0.2s}
 .opts-send-btn:active{transform:scale(0.97)}
@@ -1123,14 +1146,15 @@ ${devourBlock}
     {"type":"levelup","content":"升级描述"}
   ],
   "options":[
-    {"id":1,"text":"选项","type":"normal"},
-    {"id":2,"text":"选项","type":"special"},
-    {"id":3,"text":"选项","type":"danger"},
-    {"id":4,"text":"【问伊兹】xxx","type":"iz"}
+{"id":1,"text":"选项","type":"normal","hint":"· 可能的发展方向1 · 发展方向2"},
+    {"id":2,"text":"选项","type":"special","hint":"· 特殊走向预测"},
+    {"id":3,"text":"选项","type":"danger","hint":"· 高风险后果预测"},
+    {"id":4,"text":"【问伊兹】xxx","type":"iz","hint":"· 伊兹信息反馈"}
   ]
 }
 
 每次必含narrator和iz，options至少5个最多10个。
+每个option必须包含hint字段：基于当前玩家状态、NPC关系、威胁等级、层级特性，用「·」分隔列出1-3条此选项最可能触发的后续走向，每条不超过20字，直切要害，不废话。例如："· 引发NPC戒备 · 发现隐藏通道 · 体力消耗加剧"。
 
 当前状态：
 ${p.name} | ${p.currentLevel}(${p.levelCode}) | ${p.location}
@@ -2863,7 +2887,18 @@ function _renderOptsDrawer() {
     const isSelected=_optsSelected.has(o.id), isExpanded=_optsExpanded.has(o.id);
     const typeClass=o.type==="special"?"special":o.type==="danger"?"danger":o.type==="iz"?"iz-type":"";
     const item=document.createElement("div"); item.className=`opt-item ${typeClass} ${isSelected?"selected":""}`;
-    item.innerHTML=`<div class="opt-item-header"><span class="opt-item-num">${o.id}</span><span class="opt-item-text">${esc(o.text)}</span><div class="opt-item-actions"><button class="opt-expand-btn">${isExpanded?"收起▲":"详情▼"}</button><div class="opt-checkbox"></div></div></div><div class="opt-item-detail ${isExpanded?"open":""}">${esc(o.text)}<div style="color:var(--txt3);font-size:11px;margin-top:6px;font-family:'Share Tech Mono',monospace">类型: ${o.type||"normal"}</div></div>`;
+    item.innerHTML=`<div class="opt-item-header"><span class="opt-item-num">${o.id}</span><span class="opt-item-text">${esc(o.text)}</span><div class="opt-item-actions"><button class="opt-expand-btn">${isExpanded?"收起▲":"详情▼"}</button><div class="opt-checkbox"></div></div></div><div class="opt-item-detail ${isExpanded?"open":""}">
+  <div class="opt-hint-wrap">
+    <div class="opt-hint-label">▸ 可能的发展走向</div>
+    ${(()=>{
+      const hints=(o.hint||'').split('·').map(h=>h.trim()).filter(Boolean);
+      const colors={normal:{bg:'rgba(74,158,255,0.08)',border:'rgba(74,158,255,0.2)',idx:'#4a9eff'},special:{bg:'rgba(200,167,108,0.08)',border:'rgba(200,167,108,0.25)',idx:'#c8a76c'},danger:{bg:'rgba(255,74,74,0.08)',border:'rgba(255,74,74,0.2)',idx:'#ff7a7a'},iz:{bg:'rgba(155,107,255,0.08)',border:'rgba(155,107,255,0.2)',idx:'#b88aff'}};
+      const c=colors[o.type]||colors.normal;
+      if(!hints.length) return '<div class="opt-hint-empty">展开选项以查看走向分析…</div>';
+      return '<div class="opt-hint-rows">'+hints.map((h,i)=>`<div class="opt-hint-row" style="background:${c.bg};border:1px solid ${c.border};animation-delay:${0.15+i*0.07}s"><span class="opt-hint-idx" style="color:${c.idx}">${String(i+1).padStart(2,'0')}</span><span class="opt-hint-text">${esc(h)}</span></div>`).join('')+'</div>';
+    })()}
+  </div>
+</div>`;
     item.querySelector(".opt-item-text").addEventListener("click",(e)=>{e.stopPropagation();if(!processing)processAction("[选项"+o.id+"] "+o.text);});
     item.querySelector(".opt-item-num").addEventListener("click",(e)=>{e.stopPropagation();if(!processing)processAction("[选项"+o.id+"] "+o.text);});
     item.querySelector(".opt-expand-btn").addEventListener("click",(e)=>{e.stopPropagation();if(_optsExpanded.has(o.id))_optsExpanded.delete(o.id);else _optsExpanded.add(o.id);_renderOptsDrawer();});
